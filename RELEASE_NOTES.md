@@ -6,5 +6,6 @@ AdaptiveChess/AdaptiveChess.exe. Python, Qt and Stockfish are bundled. Keep _int
 Includes an adaptive MultiPV opponent, save/resume, analysis, history, statistics and settings.
 SHA256SUMS.txt records the Windows package and source archive hashes.
 The release pipeline tests both source and the actual packaged executable with a real engine,
-including board input, multiple replies, shutdown and save/resume across separate launches.
+including board input, multiple replies, shutdown, save/resume across separate launches,
+finished-game analysis, rating updates and the next adaptive opponent.
 See README.md for design, build instructions and MVP calibration limitations.

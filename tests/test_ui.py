@@ -71,3 +71,40 @@ def test_settings_first_run_and_corrupt_file(tmp_path):
     assert Settings(tmp_path).values['theme']=='Лес'
     (tmp_path/'settings.json').write_text('broken')
     assert Settings(tmp_path).values['theme']=='Сланец'
+
+
+def test_finished_game_updates_rating_and_opens_analysis(qtbot,tmp_path):
+    window=MainWindow(tmp_path)
+    qtbot.addWidget(window)
+    window.settings.values['sound']=False
+    window.show()
+    window._start_game(chess.WHITE)
+    window.human_move(chess.E2,chess.E4)
+    qtbot.waitUntil(lambda: not window.busy,timeout=12000)
+    window.session.resign()
+    window.advance()
+    qtbot.waitUntil(lambda: not window.busy,timeout=12000)
+    assert window.store.history()[0]['rated']==1
+    assert window.store.profile().games==1
+    window.show_analysis(window.game.database_id)
+    window.show_statistics()
+    assert len(window.dialogs)>=3
+    profile=window.store.profile()
+    window._start_game(chess.WHITE)
+    assert window.game.bot_rating==profile.target
+    window.close()
+
+
+def test_underpromotion_dialog_choice(qtbot,tmp_path,monkeypatch):
+    from PySide6.QtWidgets import QInputDialog
+    from app.services.game import GameState
+    window=MainWindow(tmp_path)
+    qtbot.addWidget(window)
+    window.settings.values['sound']=False
+    window.session.resume(GameState(board=chess.Board('7k/P7/8/8/8/8/8/7K w - - 0 1')))
+    window.session.save()
+    window.refresh()
+    monkeypatch.setattr(QInputDialog,'getItem',lambda *args: ('Ладья',True))
+    window.human_move(chess.A7,chess.A8)
+    assert window.game.board.piece_at(chess.A8).piece_type==chess.ROOK
+    window.close()

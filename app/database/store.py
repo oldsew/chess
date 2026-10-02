@@ -77,6 +77,7 @@ class Store:
                         profile: PlayerProfile) -> bool:
         # Analysis and rating are committed atomically, preventing double updates after a crash/retry.
         with self.connection:
+            self.connection.execute("BEGIN IMMEDIATE")
             row = self.connection.execute("SELECT rated FROM games WHERE id=?", (game.database_id,)).fetchone()
             if row is None:
                 raise ValueError("Game was not saved")

@@ -17,6 +17,7 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--smoke-test", type=Path)
     parser.add_argument("--smoke-resume", action="store_true")
+    parser.add_argument("--smoke-complete", action="store_true")
     args = parser.parse_args()
     app = QApplication(sys.argv[:1])
     app.setOrganizationName("AdaptiveChess")
@@ -37,7 +38,7 @@ def main() -> int:
         window.show()
         if args.smoke_test:
             from app.services.smoke import attach_smoke
-            window.smoke_timer = attach_smoke(app, window, args.smoke_test, args.smoke_resume)
+            window.smoke_timer = attach_smoke(app, window, args.smoke_test, args.smoke_resume, args.smoke_complete)
         return app.exec()
     except Exception:
         logging.exception("Startup failed")

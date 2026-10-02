@@ -53,3 +53,28 @@ def test_transaction_rolls_back_both_profile_and_game(tmp_path):
     assert not store.history()[0]['rated']
     assert store.profile().rating==1000
     store.close()
+
+
+def test_concurrent_analysis_only_updates_once(tmp_path):
+    from concurrent.futures import ThreadPoolExecutor
+    import threading
+    path=tmp_path/'db.sqlite3'
+    store=Store(path)
+    game=GameState(result='0-1')
+    store.save_game(game)
+    store.close()
+    barrier=threading.Barrier(2)
+    def complete(rating):
+        connection=Store(path)
+        barrier.wait(timeout=5)
+        try:
+            return connection.finish_analysis(game,[],Performance(90,20,0,0,0),PlayerProfile(rating=rating,games=1))
+        finally:
+            connection.close()
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        outcomes=list(pool.map(complete,[1020,1040]))
+    assert sorted(outcomes)==[False,True]
+    store=Store(path)
+    assert store.profile().rating in [1020,1040]
+    assert store.profile().games==1
+    store.close()

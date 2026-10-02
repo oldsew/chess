@@ -295,6 +295,8 @@ class MainWindow(QMainWindow):
                 profile = self.session.complete(self.analysis_game, moves, metrics)
                 self.refresh()
                 self.show_result(self.analysis_game, profile, metrics)
+                if self.store.pending_analysis():
+                    QTimer.singleShot(0, self.recover_pending)
             except Exception as error:
                 log.exception("Analysis persistence failed")
                 self.show_error(str(error))

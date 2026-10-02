@@ -16,13 +16,15 @@ def smoke(command: list[str], output: Path):
         variables["ADAPTIVE_CHESS_DATA_DIR"] = temp
         # Qt offscreen still constructs and paints the actual MainWindow.
         variables["QT_QPA_PLATFORM"] = "offscreen"
-        for stage, resume in [("first-run", False), ("resume", True)]:
+        for stage, resume, complete in [("first-run", False, False), ("resume", True, False), ("completion", False, True)]:
             report = output / f"{stage}.json"
             if report.exists():
                 report.unlink()
             args = [*command, "--smoke-test", str(report.resolve())]
             if resume:
                 args.append("--smoke-resume")
+            if complete:
+                args.append("--smoke-complete")
             try:
                 process = subprocess.run(args, env=variables, timeout=100, capture_output=True, text=True)
                 (output / f"{stage}.stderr.txt").write_text(process.stderr, encoding="utf-8")
