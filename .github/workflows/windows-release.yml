@@ -1,0 +1,49 @@
+name: Windows portable release
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 25
+    permissions:
+      contents: write
+    env:
+      QT_QPA_PLATFORM: offscreen
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            requirements-dev.txt
+      - name: Install pinned dependencies
+        run: python -m pip install -r requirements-dev.txt
+      - name: Fetch and verify official baseline x64 Stockfish
+        run: python scripts/fetch_stockfish.py --platform windows
+      - name: Test rules, adaptation, storage, engine and GUI
+        run: python -m pytest -q --junitxml=artifacts/tests.xml
+      - name: Build and smoke test actual executable
+        run: python scripts/build_release.py
+      - name: Upload Windows package, source, checksums and test evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: AdaptiveChess-Windows-x64
+          path: artifacts/
+          if-no-files-found: error
+          retention-days: 30
+      - name: Publish tagged release
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: pwsh
+        run: |
+          $tag = '${{ github.ref_name }}'
+          gh release create $tag artifacts/AdaptiveChess-Windows-x64.zip artifacts/AdaptiveChess_Source.zip artifacts/SHA256SUMS.txt --verify-tag --title "Adaptive Chess $tag" --notes-file RELEASE_NOTES.md
