@@ -34,6 +34,14 @@ class EngineService:
             log.info("Stockfish started: %s", self._engine.id.get("name"))
         return self._engine
 
+    def _configure(self, options):
+        try:
+            self._get().configure(options)
+        except (chess.engine.EngineError, TimeoutError):
+            log.exception("Stockfish configuration failed; restarting once")
+            self._stop()
+            self._get().configure(options)
+
     def _analyse(self, board, limit, **kwargs):
         try:
             return self._get().analyse(board, limit, **kwargs)
@@ -46,7 +54,7 @@ class EngineService:
         with self._lock:
             started = time.monotonic()
             profile = BehaviorProfile.for_rating(rating)
-            self._get().configure({"Skill Level": profile.skill_level, "UCI_LimitStrength": False})
+            self._configure({"Skill Level": profile.skill_level, "UCI_LimitStrength": False})
             infos = self._analyse(board, chess.engine.Limit(time=profile.search_time),
                                   multipv=min(TUNING["multipv"], board.legal_moves.count()))
             candidates = [Candidate(info["pv"][0], score_cp(info["score"], board.turn),
@@ -61,7 +69,7 @@ class EngineService:
     def analyse_game(self, final_board: chess.Board, player_color: bool, depth: int,
                      progress=None) -> tuple[list[MoveAnalysis], Performance]:
         with self._lock:
-            self._get().configure({"Skill Level": 20, "UCI_LimitStrength": False})
+            self._configure({"Skill Level": 20, "UCI_LimitStrength": False})
             board = final_board.root()
             results = []
             for ply, move in enumerate(final_board.move_stack, 1):
