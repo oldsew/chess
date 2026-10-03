@@ -16,6 +16,7 @@ DEFAULT_SETTINGS = {
     "theme": "Сланец", "sound": True, "legal_highlights": True,
     "player_color": "Белые", "show_bot_rating": True,
     "analysis_depth": TUNING["analysis_depth"], "developer_mode": False,
+    "time_control": "none", "animations": True,
 }
 
 

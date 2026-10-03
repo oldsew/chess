@@ -9,6 +9,7 @@ from pathlib import Path
 from app.adaptive.metrics import MoveAnalysis, Performance
 from app.adaptive.rating import PlayerProfile, RatingEvidence
 from app.services.game import GameState
+from app.services.clocks import TimeControl
 
 log = logging.getLogger(__name__)
 
@@ -31,6 +32,13 @@ class Store:
           rated INTEGER NOT NULL DEFAULT 0
         );
         ''')
+        # Additive migration leaves every existing game, PGN and rating record intact.
+        with self.connection:
+            self.connection.execute("BEGIN IMMEDIATE")
+            columns = {row[1] for row in self.connection.execute("PRAGMA table_info(games)")}
+            for column in ['time_control', 'clock_state', 'termination']:
+                if column not in columns:
+                    self.connection.execute(f"ALTER TABLE games ADD COLUMN {column} TEXT")
         self.connection.commit()
 
     def profile(self) -> PlayerProfile:
@@ -38,16 +46,18 @@ class Store:
         return PlayerProfile(**json.loads(row[0])) if row else PlayerProfile()
 
     def save_game(self, game: GameState):
+        metadata = (json.dumps(game.time_control.as_dict(), ensure_ascii=False),
+                    json.dumps(game.clock_state), game.termination)
         values = (game.started_at, int(game.player_color), game.result, game.rating_before,
-                  game.bot_rating, game.pgn(), game.elapsed_seconds)
+                  game.bot_rating, game.pgn(), game.elapsed_seconds, *metadata)
         with self.connection:
             if game.database_id is None:
                 cursor = self.connection.execute(
-                    "INSERT INTO games(timestamp,player_color,result,rating_before,bot_rating,pgn,duration) VALUES(?,?,?,?,?,?,?)", values)
+                    "INSERT INTO games(timestamp,player_color,result,rating_before,bot_rating,pgn,duration,time_control,clock_state,termination) VALUES(?,?,?,?,?,?,?,?,?,?)", values)
                 game.database_id = cursor.lastrowid
             else:
                 self.connection.execute(
-                    "UPDATE games SET timestamp=?,player_color=?,result=?,rating_before=?,bot_rating=?,pgn=?,duration=? WHERE id=?",
+                    "UPDATE games SET timestamp=?,player_color=?,result=?,rating_before=?,bot_rating=?,pgn=?,duration=?,time_control=?,clock_state=?,termination=? WHERE id=?",
                     (*values, game.database_id))
 
     def load_game(self, game_id: int) -> GameState:
@@ -56,7 +66,10 @@ class Store:
             raise ValueError("Партия не найдена")
         return GameState.from_pgn(row["pgn"], player_color=bool(row["player_color"]),
                                   bot_rating=row["bot_rating"], rating_before=row["rating_before"],
-                                  started_at=row["timestamp"], elapsed_seconds=row["duration"], database_id=row["id"])
+                                  started_at=row["timestamp"], elapsed_seconds=row["duration"], database_id=row["id"],
+                                  time_control=TimeControl(**json.loads(row["time_control"])) if row["time_control"] else TimeControl(),
+                                  clock_state=json.loads(row["clock_state"]) if row["clock_state"] else None,
+                                  termination=row["termination"] or "")
 
     def unfinished(self) -> GameState | None:
         row = self.connection.execute("SELECT id FROM games WHERE result='*' ORDER BY id DESC LIMIT 1").fetchone()

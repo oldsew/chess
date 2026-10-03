@@ -7,6 +7,8 @@ from datetime import datetime, timezone
 import chess
 import chess.pgn
 
+from app.services.clocks import TimeControl
+
 
 @dataclass
 class GameState:
@@ -18,6 +20,9 @@ class GameState:
     result: str = "*"
     elapsed_seconds: float = 0
     database_id: int | None = None
+    time_control: TimeControl = field(default_factory=TimeControl)
+    clock_state: dict | None = None
+    termination: str = ""
 
     def play(self, move: chess.Move):
         if self.result != "*":
@@ -28,10 +33,17 @@ class GameState:
         outcome = self.board.outcome(claim_draw=True)
         if outcome:
             self.result = outcome.result()
+            self.termination = outcome.termination.name.lower()
 
     def resign(self):
         if self.result == "*":
             self.result = "0-1" if self.player_color else "1-0"
+            self.termination = "resignation"
+
+    def timeout(self, loser: chess.Color):
+        if self.result == "*":
+            self.result = "1/2-1/2" if self.board.has_insufficient_material(not loser) else "0-1" if loser else "1-0"
+            self.termination = "timeout"
 
     def pgn(self) -> str:
         game = chess.pgn.Game.from_board(self.board)
@@ -40,6 +52,10 @@ class GameState:
             "White": "Игрок" if self.player_color else "Adaptive Chess",
             "Black": "Adaptive Chess" if self.player_color else "Игрок", "Result": self.result,
         })
+        if self.time_control.timed:
+            game.headers["TimeControl"] = self.time_control.pgn_value
+        if self.termination == "timeout":
+            game.headers["Termination"] = "time forfeit"
         return str(game)
 
     @classmethod
@@ -49,6 +65,11 @@ class GameState:
             raise ValueError("Не удалось прочитать сохранённую партию")
         state = cls(board=parsed.end().board(), **kwargs)
         state.result = parsed.headers.get("Result", "*")
+        if state.result != "*" and not state.termination:
+            outcome = state.board.outcome(claim_draw=True)
+            state.termination = (outcome.termination.name.lower() if outcome and outcome.result() == state.result else
+                                 "timeout" if parsed.headers.get("Termination") == "time forfeit" else
+                                 "draw" if state.result == "1/2-1/2" else "unknown")
         return state
 
     def player_score(self) -> float:

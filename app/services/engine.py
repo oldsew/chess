@@ -12,6 +12,8 @@ import chess.engine
 from app.adaptive.metrics import MoveAnalysis, Performance, centipawn_loss, classify, score_cp
 from app.adaptive.selector import BehaviorProfile, Candidate, Selection, select_move
 from app.config.settings import TUNING, engine_path
+from app.config.gameplay import GAMEPLAY
+from app.services.live import LiveEvaluation
 
 log = logging.getLogger(__name__)
 
@@ -50,13 +52,15 @@ class EngineService:
             self._stop()
             return self._get().analyse(board, limit, **kwargs)
 
-    def choose(self, board: chess.Board, rating: float, natural_delay=True) -> Selection:
+    def choose(self, board: chess.Board, rating: float, natural_delay=True, on_evaluation=None) -> Selection:
         with self._lock:
             started = time.monotonic()
             profile = BehaviorProfile.for_rating(rating)
             self._configure({"Skill Level": profile.skill_level, "UCI_LimitStrength": False})
             infos = self._analyse(board, chess.engine.Limit(time=profile.search_time),
                                   multipv=min(TUNING["multipv"], board.legal_moves.count()))
+            if on_evaluation and infos:
+                on_evaluation(LiveEvaluation.from_info(board, infos[0]))
             candidates = [Candidate(info["pv"][0], score_cp(info["score"], board.turn),
                                     info["score"].pov(board.turn).mate()) for info in infos if info.get("pv")]
             selected = select_move(board, candidates, rating)
@@ -65,6 +69,15 @@ class EngineService:
             if self.cancelled.is_set():
                 raise InterruptedError("Операция отменена")
             return selected
+
+    def evaluate_live(self, board: chess.Board) -> LiveEvaluation:
+        with self._lock:
+            if self.cancelled.is_set():
+                raise InterruptedError('Оценка отменена')
+            self._configure({"Skill Level": 20, "UCI_LimitStrength": False})
+            cfg = GAMEPLAY['position_indicator']
+            info = self._analyse(board, chess.engine.Limit(depth=cfg['depth'], time=cfg['time_limit']))
+            return LiveEvaluation.from_info(board, info)
 
     def analyse_game(self, final_board: chess.Board, player_color: bool, depth: int,
                      progress=None) -> tuple[list[MoveAnalysis], Performance]:

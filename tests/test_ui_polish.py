@@ -33,7 +33,7 @@ def animated_board(qtbot, before, uci):
 
 def test_nonblocking_eased_movement_keeps_committed_position(qtbot):
     widget, after = animated_board(qtbot, chess.Board(), 'e2e4')
-    assert 160 <= widget.animation.duration() <= 220
+    assert 220 <= widget.animation.duration() <= 280
     assert widget.animation.easingCurve().type() == QEasingCurve.OutCubic
     events = []
     QTimer.singleShot(40, lambda: events.append(widget.animating))
@@ -61,7 +61,7 @@ def test_capture_and_en_passant_have_visible_fade(qtbot, fen, uci, captured_squa
     widget.animation.setCurrentTime(80)
     assert 0.2 < widget.capture_opacity < 0.8
     middle = widget.grab().toImage()
-    widget.animation.setCurrentTime(160)
+    widget.animation.setCurrentTime(int(widget.animation.duration() * .86))
     assert widget.capture_opacity < 0.05
     assert middle != widget.grab().toImage(), 'Capture frames were identical'
     assert widget.board.fen() == after.fen()
@@ -93,7 +93,7 @@ def test_promotion_crossfades_near_arrival(qtbot, promotion):
     widget.animation.pause()
     widget.animation.setCurrentTime(70)
     assert widget.promotion_blend == 0
-    widget.animation.setCurrentTime(155)
+    widget.animation.setCurrentTime(int(widget.animation.duration() * .82))
     assert 0 < widget.promotion_blend < 1
     assert widget.motion_rect(0).center().y() < widget.square_rect(chess.A8).center().y() + 2
 

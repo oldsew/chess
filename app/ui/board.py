@@ -1,29 +1,38 @@
 from __future__ import annotations
 
 import chess
-from PySide6.QtCore import QPointF, QRectF, Qt, Signal, QVariantAnimation, QEasingCurve
+from PySide6.QtCore import QPointF, QRectF, Qt, Signal, QVariantAnimation, QEasingCurve, QTimer
 from PySide6.QtGui import QColor, QFont, QPainter, QPen, QRadialGradient
 from PySide6.QtWidgets import QWidget
 from PySide6.QtSvg import QSvgRenderer
 from app.config.settings import resource_root
 from app.ui.transitions import MoveTransition
+from app.config.gameplay import GAMEPLAY
+import math
 
 THEMES = {
     "Сланец": ("#e3e7ed", "#71849a"),
     "Лес": ("#e9ecd9", "#78917b"),
     "Песок": ("#f0e5d0", "#b49b7c"),
 }
-MOVE_DURATION_MS = 190
+MOVE_DURATION_MS = GAMEPLAY['move_duration_ms']
 
 
 class ChessBoard(QWidget):
     move_requested = Signal(int, int)
     animation_started = Signal(object)
     animation_finished = Signal()
+    presentation_finished = Signal()
+    previous_requested = Signal()
+    next_requested = Signal()
 
     def __init__(self):
         super().__init__()
         self.setMinimumSize(360, 360)
+        self.setFocusPolicy(Qt.StrongFocus)
+        self.animations_enabled = True
+        self._mate_pending = False
+        self.mate_progress = 0.0
         self.setAccessibleName("Шахматная доска")
         self.board = chess.Board()
         self.orientation = chess.WHITE
@@ -47,6 +56,13 @@ class ChessBoard(QWidget):
         self.animation.setEasingCurve(QEasingCurve.OutCubic)
         self.animation.valueChanged.connect(self._animation_frame)
         self.animation.finished.connect(self._animation_done)
+        self.mate_animation = QVariantAnimation(self)
+        self.mate_animation.setDuration(GAMEPLAY['mate_duration_ms'])
+        self.mate_animation.setStartValue(0.0)
+        self.mate_animation.setEndValue(1.0)
+        self.mate_animation.setEasingCurve(QEasingCurve.Linear)
+        self.mate_animation.valueChanged.connect(self._mate_frame)
+        self.mate_animation.finished.connect(self._mate_done)
         self.renderers = {(color, piece): QSvgRenderer(str(resource_root() / "resources/pieces" / f"{color}-{chess.piece_name(piece)}.svg"))
                           for color in ["white", "black"] for piece in chess.PIECE_TYPES}
 
@@ -76,8 +92,11 @@ class ChessBoard(QWidget):
             # MainWindow can refresh twice during a move; keep the ongoing transition intact.
             self.update()
             return
-        transition = MoveTransition.between(self.board, board) if animate else None
+        transition = MoveTransition.between(self.board, board) if animate and self.animations_enabled else None
         self.animation.stop()
+        self.mate_animation.stop()
+        self.mate_progress = 0
+        self._mate_pending = animate and self.animations_enabled and board.is_checkmate()
         self.transition = transition
         self._motion_start = None
         if transition and self._drop_start is not None:
@@ -93,6 +112,8 @@ class ChessBoard(QWidget):
             self.animation.start()
         else:
             self.progress = 1.0
+            if self._mate_pending:
+                self.mate_animation.start()
         self.update()
 
     def _animation_frame(self, progress):
@@ -105,6 +126,24 @@ class ChessBoard(QWidget):
         self.progress = 1.0
         self.update()
         self.animation_finished.emit()
+        if self._mate_pending:
+            self.mate_animation.start()
+        else:
+            self.presentation_finished.emit()
+
+    @property
+    def presenting_end(self):
+        return self._mate_pending
+
+    def _mate_frame(self, progress):
+        self.mate_progress = float(progress)
+        self.update()
+
+    def _mate_done(self):
+        self._mate_pending = False
+        self.mate_progress = 0
+        self.update()
+        self.presentation_finished.emit()
 
     @property
     def capture_opacity(self) -> float:
@@ -187,6 +226,18 @@ class ChessBoard(QWidget):
                     painter.restore()
                 else:
                     self._draw_piece(painter, motion.piece, rect)
+        if self._mate_pending and self.transition is None:
+            king = self.board.king(self.board.turn)
+            if king is not None:
+                pulse = math.sin(math.pi * self.mate_progress) ** 2
+                x, y, cell = self.geometry_values()
+                painter.fillRect(QRectF(x, y, cell * 8, cell * 8), QColor(17, 24, 34, int(28 * pulse)))
+                rect = self.square_rect(king)
+                glow = QRadialGradient(rect.center(), rect.width() * 0.72)
+                glow.setColorAt(0, QColor(230, 103, 98, int(120 * pulse)))
+                glow.setColorAt(1, QColor(230, 103, 98, 0))
+                painter.fillRect(rect, glow)
+                self._draw_piece(painter, self.board.piece_at(king), rect)
         x, y, cell = self.geometry_values()
         painter.setPen(QColor("#9daabd"))
         painter.setFont(QFont("Segoe UI", 9))
@@ -205,6 +256,8 @@ class ChessBoard(QWidget):
         return piece and piece.color == self.player_color and self.board.turn == self.player_color
 
     def mousePressEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            self.setFocus(Qt.MouseFocusReason)
         if event.button() != Qt.LeftButton or not self.interactive or self.animating:
             return
         square = self.square_at(event.position())
@@ -216,7 +269,7 @@ class ChessBoard(QWidget):
                 self.selected = None
                 self.move_requested.emit(origin, square)
                 return
-        self.selected = square if self._can_select(square) else None
+        self.selected = None if square == self.selected else square if self._can_select(square) else None
         self.update()
 
     def mouseMoveEvent(self, event):
@@ -239,3 +292,13 @@ class ChessBoard(QWidget):
         self._origin = None
         self._press = None
         self.update()
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_Left:
+            self.previous_requested.emit()
+            event.accept()
+        elif event.key() == Qt.Key_Right:
+            self.next_requested.emit()
+            event.accept()
+        else:
+            super().keyPressEvent(event)

@@ -29,6 +29,8 @@ def attach_polish_smoke(app, window, report_path):
              'cues': [], 'audio_status': {}, 'muted': False}
     timer = QTimer(window)
     timer.setInterval(12)
+    # Explicitly test full motion even when the runner disables system animations.
+    window.board.animations_enabled = True
     decoder = QAudioDecoder(window)
     window.polish_decoder = decoder
     window.sounds.cue_requested.connect(state['cues'].append)

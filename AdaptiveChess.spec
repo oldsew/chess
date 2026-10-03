@@ -3,6 +3,7 @@ from pathlib import Path
 root = Path(SPECPATH)
 datas = [
     (str(root / 'app/config/tuning.json'), 'app/config'),
+    (str(root / 'app/config/gameplay.json'), 'app/config'),
     (str(root / 'resources'), 'resources'),
     (str(root / 'engines'), 'engines'),
     (str(root / 'LICENSE'), '.'),

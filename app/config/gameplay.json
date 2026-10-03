@@ -1,0 +1,16 @@
+{
+  "time_controls": [
+    {"key": "none", "label": "Без времени", "initial_seconds": null, "increment": 0, "category": "unlimited"},
+    {"key": "30+0", "label": "30+0 — длинная", "initial_seconds": 1800, "increment": 0, "category": "long"},
+    {"key": "15+10", "label": "15+10 — rapid", "initial_seconds": 900, "increment": 10, "category": "rapid"},
+    {"key": "10+5", "label": "10+5 — rapid", "initial_seconds": 600, "increment": 5, "category": "rapid"},
+    {"key": "5+3", "label": "5+3 — blitz", "initial_seconds": 300, "increment": 3, "category": "blitz"},
+    {"key": "3+2", "label": "3+2 — blitz", "initial_seconds": 180, "increment": 2, "category": "blitz"},
+    {"key": "1+0", "label": "1+0 — bullet", "initial_seconds": 60, "increment": 0, "category": "bullet"}
+  ],
+  "position_indicator": {"thresholds_cp": [30, 90, 200], "hysteresis_cp": 12, "depth": 10, "time_limit": 0.08},
+  "move_duration_ms": 250,
+  "mate_duration_ms": 650,
+  "clock_refresh_ms": 150,
+  "clock_autosave_seconds": 2
+}

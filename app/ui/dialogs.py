@@ -8,6 +8,7 @@ from PySide6.QtWidgets import (QCheckBox, QComboBox, QDialog, QDialogButtonBox, 
 
 from app.config.settings import DEFAULT_SETTINGS
 from app.ui.board import THEMES, ChessBoard
+from app.services.clocks import TIME_CONTROLS
 
 
 class SettingsDialog(QDialog):
@@ -16,10 +17,11 @@ class SettingsDialog(QDialog):
         self.setWindowTitle("Настройки")
         form = QFormLayout(self)
         self.fields = {}
-        combos = {"theme": list(THEMES), "player_color": ["Белые", "Чёрные", "Случайно"]}
+        combos = {"theme": list(THEMES), "player_color": ["Белые", "Чёрные", "Случайно"], "time_control": [c.key for c in TIME_CONTROLS]}
         labels = {"theme": "Доска", "sound": "Звуки игры", "legal_highlights": "Допустимые ходы",
                   "player_color": "Мой цвет", "show_bot_rating": "Уровень соперника после партии",
-                  "analysis_depth": "Глубина анализа (с лимитом времени)", "developer_mode": "Режим разработчика"}
+                  "analysis_depth": "Глубина анализа (с лимитом времени)", "developer_mode": "Режим разработчика",
+                  "time_control": "Контроль для новой партии", "animations": "Анимации"}
         for key in DEFAULT_SETTINGS:
             if key in combos:
                 field = QComboBox()
