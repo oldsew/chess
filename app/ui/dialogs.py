@@ -159,6 +159,7 @@ class AnalysisDialog(QDialog):
             label = QLabel(text)
             label.setObjectName('sectionTitle')
             side.addWidget(label)
+            return label
         self.played_label = QLabel('Выберите ход в списке')
         self.played_label.setWordWrap(True)
         self.played_label.setObjectName('playedMove')
@@ -176,13 +177,13 @@ class AnalysisDialog(QDialog):
         self.response_label.setTextFormat(Qt.PlainText)
         side.addWidget(self.response_label)
         self.variations = VariationList()
-        heading('Лучший вариант · какую проблему решает')
+        self.recommendation_heading = heading('Лучший вариант · какую проблему решает')
         self.recommendation = QLabel('')
         self.recommendation.setObjectName('recommendation')
         self.recommendation.setWordWrap(True)
         self.recommendation.setTextFormat(Qt.PlainText)
         side.addWidget(self.recommendation)
-        heading('Варианты и их отличия · нажмите для просмотра')
+        heading('Другие хорошие варианты · нажмите для просмотра')
         side.addWidget(self.variations,1)
         self.advice_heading = QLabel('Совет')
         self.advice_heading.setObjectName('sectionTitle')
@@ -259,6 +260,7 @@ class AnalysisDialog(QDialog):
         return format_evaluation(move[side+'_cp'])
 
     def show_position(self,row,column):
+        self.recommendation_heading.setText('Лучший вариант · какую проблему решает')
         if row < 0 or row >= len(self.moves):
             return
         self.selected_row = row
@@ -335,8 +337,12 @@ class AnalysisDialog(QDialog):
         self.line_cursor = min(1,len(self.line_moves))
         self.showing_before = False
         selected = self.alternatives[row]
+        self.recommendation_heading.setText(('Лучший вариант' if row==0 else 'Выбранная альтернатива')+' · какую проблему решает')
         detail = next((a for a in self.current_explanation.get('alternatives',[]) if a['uci']==selected['uci']),{})
         self.recommendation.setText(detail.get('idea',self.current_explanation.get('recommendation','')))
+        if detail.get('reason'):
+            from app.services.analysis_explainer import TITLES
+            self.summary.setText(TITLES[detail['reason_type']]+'\n'+detail['reason'])
         played = self.game.board.move_stack[self.moves[self.selected_row]['ply']-1]
         chosen = chess.Move.from_uci(selected['uci'])
         self.board.annotations = [(played.from_square,played.to_square,'played'),(chosen.from_square,chosen.to_square,'recommended')]

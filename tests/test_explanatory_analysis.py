@@ -14,8 +14,8 @@ from test_coaching import LOSS_FEN, info, loss_notes
 
 
 CASES = [
-    ('fork','4k3/8/8/8/5n2/8/PP3PPP/2RQ2K1 w - - 0 1','d1d2',
-     'f4e2 g1f1 e2c1 d2c1','c1c4 f4e2 g1f1 e8e7',100,-200,-2),
+    ('fork','4k3/8/8/8/5n2/8/PP3PPP/2RQ2K1 w - - 0 1','d1d4',
+     'f4e2 g1f1 e2d4 c1c4 e8f8 c4c7','d1f3 f4e6 c1c4 e8d7 f3d5 d7e7',100,-900,-9),
     ('pin','5bk1/8/8/8/3pp3/2N5/PP3PPP/3QK3 w - - 0 1','d1d2',
      'f8b4 f2f3 d4c3 b2c3','c3e4 f8b4 e1f1 g8h8',100,-200,-2),
     ('pawn_loss','6k1/8/8/3p4/4P3/8/PP3PPP/5BK1 w - - 0 1','a2a3',
@@ -199,3 +199,53 @@ def test_real_engine_matched_comparison_and_long_pvs_both_colors():
                 assert line['valid'] and (6<=len(line['moves'])<=10 or line['terminal'])
                 assert len(alternative['pv_uci'])<=6
     finally:service.close()
+
+
+@pytest.mark.parametrize('kind,fen,played,response,best',[
+    ('central_break','rnbqkbnr/pppp1ppp/4p3/8/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2',
+     'f1c4','d7d5 c4b3 g8f6 g1f3 f8d6','e4e5 d7d5 g1f3 b8c6 d2d4 g8f6'),
+    ('castling_rights','rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2',
+     'e1e2','g8f6 d2d3 f8c5 e2e1 b8c6','g1f3 b8c6 f1c4 g8f6 d2d3 f8c5'),
+    ('king_safety','3q2k1/5ppp/8/8/8/7b/5PPP/1N4K1 w - - 0 1',
+     'g2g3','h7h5 b1c3 d8e7 g1h1 h5h4','b1c3 h7h5 f2f3 d8d7 g1h1 g8h8'),
+    ('passed_pawn','r5k1/p4ppp/8/3p4/8/1PP5/5PPP/R5K1 w - - 0 1',
+     'c3c4','d5d4 a1e1 g8f8 g1f1 a8b8','a1d1 d5d4 g1f1 g8f8 f2f3 a8b8'),
+    ('missed_check','8/3q1k2/8/8/8/5N2/5PPP/6K1 w - - 0 1',
+     'g2g3','d7d1 g1g2 d1d5 g2g1 d5d4','f3e5 f7f8 e5d7 f8e7 d7e5 e7f8'),
+])
+def test_additional_causes_require_scored_comparison_and_concrete_features(kind,fen,played,response,best):
+    board=chess.Board(fen);move=chess.Move.from_uci(played)
+    cp=1000 if kind=='missed_check' else 100
+    notes=build_coaching(board,move,info(cp,best),info(0,response),[info(cp,best)],True,{'equal_depth':True})
+    value=notes['explanation']
+    assert notes['response']['analysis_pv_valid'] and notes['alternatives'][0]['analysis_pv_valid']
+    assert value['reason_type']==kind and not value['fallback']
+    assert value['confidence']==('high' if kind=='missed_check' else 'medium')
+    assert value['key_squares']
+    assert value['opponent_pv'][0]==response.split()[0]
+
+
+def test_verified_fork_stays_concrete_when_better_continuation_has_mate_score():
+    _,fen,played,response,best,_,_,_=CASES[0]
+    board=chess.Board(fen)
+    notes=build_coaching(board,chess.Move.from_uci(played),info(1000,best),
+                         info(700,response),[info(0,best,mate=14)],True,{'equal_depth':True})
+    assert notes['explanation']['reason_type']=='fork'
+    assert notes['explanation']['confidence']=='high'
+    assert notes['explanation']['factors']['detected_tactic']['verified_capture']
+
+
+def test_pv_extension_uses_same_depth_and_preserves_root_score(monkeypatch):
+    service=EngineService();count=0
+    def analyse(board,limit,**kwargs):
+        nonlocal count
+        if kwargs.get('multipv'):return [info(99,'e2e4')]
+        count+=1
+        return {'score':info(count*100,'')['score'],'pv':[next(iter(board.legal_moves))], 'depth':limit.depth}
+    monkeypatch.setattr(service,'_analyse',analyse)
+    actual,alternatives,comparison=service._compare_teaching_moves(chess.Board(),chess.Move.from_uci('a2a3'),16)
+    assert actual['score'].pov(True).score()==100
+    assert len(actual['pv'])==5 and len(alternatives[0]['pv'])==6
+    assert comparison['equal_depth']
+    assert all(sample['pv_plies']==6 for sample in comparison['samples'])
+    assert all(t['depth']==16 for sample in comparison['samples'] for t in sample['pv_extensions'])

@@ -146,7 +146,7 @@ class EngineService:
             extensions=[]
             while len(pv)+1<cfg['min_explanation_plies'] and not continuation.is_game_over():
                 if self.cancelled.is_set():raise InterruptedError('Объясняющий анализ отменён')
-                tail=self._analyse(continuation,chess.engine.Limit(depth=shared_depth,time=cfg['time_limit']))
+                tail=self._analyse(continuation,chess.engine.Limit(depth=shared_depth))
                 old_length=len(pv)
                 for response in tail.get('pv',[])[:cfg['analysis_pv_plies']-1-len(pv)]:
                     if response not in continuation.legal_moves:break
@@ -157,6 +157,7 @@ class EngineService:
             evaluated[move]=(info,position.is_game_over())
         alternatives=[]
         for move in candidates:
+            if move==played:continue
             info,_=evaluated[move]
             alternatives.append({**info,'pv':[move,*info.get('pv',[])]})
         # Refined comparable scores can reorder candidates from the budgeted discovery.
@@ -166,7 +167,8 @@ class EngineService:
                  'pv_plies':len(info.get('pv',[]))+1,'pv_extensions':info.get('pv_extensions',[])}
                 for move,(info,terminal) in evaluated.items()]
         return actual,alternatives,{'requested_depth':shared_depth,'samples':depths,
-                                    'equal_depth':all(sample['terminal'] or sample['depth']==shared_depth for sample in depths),
+                                    'equal_depth':all((sample['terminal'] or sample['depth']==shared_depth) and
+                                                      all(tail['depth']==shared_depth for tail in sample['pv_extensions']) for sample in depths),
                                     'analysis_pv_plies':cfg['analysis_pv_plies'],'ui_pv_plies':cfg['pv_plies']}
 
     def _stop(self):

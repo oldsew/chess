@@ -1,43 +1,40 @@
-Adaptive Chess 0.5.1 — a quieter desktop interface, substantial pieces and clearer teaching.
+Adaptive Chess 0.6.0 — concrete explanations of mistakes and distinct alternative ideas.
 
-- Neutral teaching fallback: when short engine evaluations disagree, recommendations no longer
-  claim a higher score. Observable board geometry does not assert an unproved contribution to evaluation.
-- Original Staunton-inspired SVG set with wider turned bases and bodies, stronger crowns,
-  warm ivory and graphite surfaces, soft gradients, ambient shading and restrained highlights.
-  All twelve vectors remain lightweight, filter-free and bundled in the portable package.
-- Unified neutral graphite/warm-grey UI, gently raised buttons with hover/pressed/disabled
-  states, consistent panels and clocks. Live position text gains seven semantic color levels;
-  the existing user perspective and hysteresis determine both words and colors.
-- Adjacent history positions animate forward and backward over 250 ms, including captured
-  pieces returning, en passant, both castling pieces and promotion. Rapid input safely replaces
-  the current transition. Multi-ply jumps and returning to the latest position remain immediate.
-  Reviewing a historical mate never repeats the result pulse. PGN and actual clocks never rewind.
-- Offline analysis separates what happened from why the recommended move is better. Material
-  and mate explanations reuse existing legal PV evidence. Development, center, open-file and
-  check ideas state observable board facts; unknown causes remain neutral. No extra engine/API
-  calls, no mandatory LLM, and no additional dependency.
-- Selecting a significant mistake shows the position before it with two restrained arrows.
-  Short recommendation lines animate in both directions; returning to the actual played
-  position never edits PGN. Old saved analyses remain readable, with ideas reconstructed where
-  prior PV evidence is available. Developer Mode includes explanation type, confidence,
-  detected motif, material delta, chosen recommendation, PV and factors.
-- Small-window layout keeps clocks and history controls visible. Setup/move rows and teaching
-  content scroll as needed. Extra captions hide at low height. All three DPI smoke processes
-  check a 1366x768 physical workspace at 100%, 125% and 150%, with screenshots as evidence.
-- Adaptive rating/behavior profiles, selection, final engine calculations, clock/session logic,
-  SQLite data and custom WAV sounds are retained unchanged. No schema migration or data reset.
+- Teachable mistakes now receive a separate comparison of the played move and up to three
+  engine recommendations at the same fixed depth (up to 16), sharing the existing background
+  Stockfish service. Legal explanatory lines retain 6–10 plies; the UI shows at most six.
+  A shorter line is accepted when the game ends. Candidate-discovery scores never substitute
+  for matched-depth scores. Short transposition PVs are extended with verified engine moves.
+- Explanations compare resulting positions: material, profitable legal capture threats,
+  mobility, king cover, castling rights, development, central control, pawn structure and
+  passed pawns. Legal-PV tactics identify forks, absolute/relative pins, double and discovered
+  attacks, and deflection of an overloaded defender. Equal exchanges, pinned illegal captures,
+  old pins, invalid PVs and possible compensation cannot support a confident material claim.
+- Mistake review separates why the move was bad, the opponent's concrete continuation,
+  the best alternative and other possibilities. Each alternative has its own position evidence
+  and response. Choosing it synchronizes the explanation, arrow and key-square highlights.
+  Variation review remains read-only and never changes the original PGN or clocks.
+- Confidence controls the strength of claims. Neutral fallback follows feature/PV checks;
+  conflicting comparable scores explicitly avoid a made-up cause. Mate scores remain separate
+  and do not hide a verified tactical material loss. Developer Mode exposes all requested
+  feature deltas, detected tactic, full PV, confidence and each achieved comparison depth.
+- Existing rating calculations, opponent behavior profiles, move selection, base CPL/accuracy,
+  database schema, clocks, history, SVG pieces and custom sounds are retained. No dependency
+  added and no user data migration required. Older saved analyses remain readable.
 
-Validation: 204 regression tests, plus ten actual-executable smoke stages, including the seven
-existing gameplay/restore/engine/audio/learning stages and three DPI/visual stages. Each new
-stage observes intermediate frames for fourteen forward/backward transitions, verifies rapid
-navigation, semantic colors, before-move highlights, both-color explanations and read-only PV
-review. The release contains Windows portable, corresponding source and SHA256SUMS.txt.
+Validation: 237 regression tests and eleven actual-executable smoke stages. The new stage
+runs production analysis on twelve reproducible PGN games for both player colors, verifies
+matched depths and legal longer PVs, checks that one engine process and the GUI event loop
+remain active, and exercises synchronized alternative review in the packaged executable.
+Existing tests and all prior gameplay, restart, audio, animation and 100/125/150% DPI smoke
+stages remain in the release pipeline. Corpus results and UI screenshots accompany CI evidence.
 
-Extract the entire AdaptiveChess-Windows-x64.zip and open AdaptiveChess/AdaptiveChess.exe.
-Keep _internal beside the executable. No Python/Qt/Stockfish install is needed.
+The release contains AdaptiveChess-Windows-x64.zip, AdaptiveChess_Source.zip and SHA256SUMS.txt.
+Extract the entire Windows ZIP and open AdaptiveChess/AdaptiveChess.exe with _internal beside
+it. No Python, Qt or Stockfish installation is needed.
 
-Known limits: teaching intentionally favors verified short-line facts over speculative strategy.
-Long descriptions and move rows use scrolling at high DPI. Automated offscreen rendering checks
-layout, resources and behavior, not subjective beauty or physical monitor appearance. Audio
-resources, decoding and mute are verified; physical Windows listening is a separate manual check.
-The displayed level remains an internal Adaptive Chess Rating, not certified FIDE/online Elo.
+Known limits: local feature comparisons explain observable differences, not a guaranteed unique
+strategic cause. Engine PVs illustrate strong responses, not every possible defense. Deeper
+teaching comparisons add background analysis work only for significant mistakes. Automated
+Windows checks cover rendering, resources and behavior; they do not replace physical listening
+or subjective review on a monitor. The level remains an internal Adaptive Chess Rating.

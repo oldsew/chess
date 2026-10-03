@@ -76,12 +76,12 @@ def _select_reason(before,played,alt,data,notes,actual_line,best_line,delta,moti
     san=before.san(played);best_san=before.san(alt)
     score=data.get('evaluation_cp');after=notes.get('after_cp')
     gap=score-after if score is not None and after is not None else None
-    supported=gap is not None and gap>CFG['minimum_feature_gap_cp']
+    mate_advantage=bool(data.get('mate_winning') and not notes.get('after_mate_winning'))
+    supported=mate_advantage or gap is not None and gap>CFG['minimum_feature_gap_cp']
     position=before.copy(stack=False);position.push(alt)
     if position.is_checkmate() and not actual_line['states'][1].is_checkmate():
         return 'missed_mate','high',f'{san} упускает немедленное окончание партии: {best_san} ставит мат. У короля нет законного ответа на шах.',[alt.to_square],{'mate':True}
-    if (notes.get('reason')=='allowed_mate' or
-        notes.get('reason')=='missed_forced_mate' and data.get('mate_winning')):
+    if notes.get('reason')=='allowed_mate':
         kind=notes['reason']
         text=(f'{san} допускает матовую последовательность соперника после {_reply(actual_line)}.' if kind=='allowed_mate' else
               f'{san} упускает найденную матовую атаку; {best_san} сохраняет форсированный мат.')
@@ -95,7 +95,7 @@ def _select_reason(before,played,alt,data,notes,actual_line,best_line,delta,moti
     enough=(legacy or (len(actual_line['moves'])>=TUNING['coaching']['min_explanation_plies'] or actual_line['terminal']) and
                       (len(best_line['moves'])>=TUNING['coaching']['min_explanation_plies'] or best_line['terminal']))
     material_supported=(supported and (legacy or notes.get('comparison',{}).get('equal_depth'))
-                        and material_gap>=1 and gap>=material_gap*100*CFG['material_score_ratio'] and
+                        and material_gap>=1 and (mate_advantage or gap>=material_gap*100*CFG['material_score_ratio']) and
                         actual_line['valid'] and best_line['valid'] and enough)
     lost=[e for e in actual_line['events'] if e['color']==color]
     if material_supported and material_a<0 and lost:
@@ -126,6 +126,9 @@ def _select_reason(before,played,alt,data,notes,actual_line,best_line,delta,moti
               + ('шах вынуждает соперника отвечать на угрозу королю. ' if kind=='missed_check' else '')
               + f"Проверенное продолжение {' → '.join(best_line['san'][:6])} улучшает материальный баланс на {material_b}.")
         return kind,'high',text,[e['square'] for e in won],{'captures':won}
+    if mate_advantage:
+        return 'missed_forced_mate','high',(f'{san} упускает найденную матовую атаку; {best_san} сохраняет форсированный мат. '
+                                          'Короткая показанная линия иллюстрирует начало атаки; матовая оценка подтверждена движком.'),[alt.to_square],{'mate':data.get('mate')}
     # A legal capture threat is useful even when a short PV cannot prove an uncompensated loss.
     threats=delta['removed_capture_threats']
     if threats and supported:
@@ -182,9 +185,9 @@ def _select_reason(before,played,alt,data,notes,actual_line,best_line,delta,moti
         return 'mobility','medium',(f"После {san} {NAMES[item['piece']]} {chess.square_name(item['actual_square'])} имеет {item['actual']} доступных ходов "
                                    f"против {item['best']} в варианте {best_san}. Продолжение соперника: {_reply(actual_line)}; "
                                    'рекомендация сохраняет активность этой фигуры.'),[item['actual_square']],item
-    if supported and score>=CFG['winning_cp'] and abs(after)<=CFG['equal_cp']:
+    if supported and score is not None and after is not None and score>=CFG['winning_cp'] and abs(after)<=CFG['equal_cp']:
         return 'won_to_equal','medium',f'{san} упускает преимущество: после {_reply(actual_line)} и показанных ответов соперник выравнивает игру. {best_san} сохраняет выигрышные возможности в сравниваемом продолжении.',[],{}
-    if supported and abs(score)<=CFG['equal_cp'] and after<=-CFG['worse_cp']:
+    if supported and score is not None and after is not None and abs(score)<=CFG['equal_cp'] and after<=-CFG['worse_cp']:
         return 'equal_to_worse','medium',f'{san} передаёт инициативу сопернику после {_reply(actual_line)}; равновесие сохраняется в варианте {best_san}. Конкретный тактический выигрыш в доступной линии не установлен.',[],{}
     enemy_a,enemy_b=delta['end_opponent_actual']['mobility'],delta['end_opponent_best']['mobility']
     if supported and enemy_a-enemy_b>=CFG['mobility_gain']:
@@ -201,6 +204,9 @@ def _alternative_idea(before,played,alt,data,actual_line,line,delta,primary,colo
     after=before.copy(stack=False);after.push(alt)
     hints=[];facts=[]
     if after.is_checkmate():return f'{san} сразу ставит мат; {actual_san} оставляет сопернику ответ.', [{'type':'mate'}]
+    if primary=='allowed_mate' and (data.get('mate') is None or data.get('mate_winning')):
+        hints.append('избегает найденной матовой последовательности '+_reply(actual_line))
+        facts.append({'type':'mate_defence','prevented_reply':actual_line['pv_uci'][1:]})
     if data.get('mate') is not None and data.get('mate_winning'):
         hints.append('сохраняет найденную форсированную матовую атаку');facts.append({'type':'forced_mate'})
     if delta['best_material_delta']>delta['material_delta']:
@@ -222,6 +228,11 @@ def _alternative_idea(before,played,alt,data,actual_line,line,delta,primary,colo
     controlled=sorted(set(delta['best']['center_squares'])-set(delta['actual']['center_squares']))
     if controlled:
         hints.append('сохраняет дополнительный контроль '+square_names(controlled));facts.append({'type':'center','squares':controlled})
+    if mover.piece_type==chess.PAWN:
+        new_control=sorted(set(delta['best']['pawns']['control'])-set(delta['actual']['pawns']['control']))
+        if new_control:
+            hints.append('дополнительно контролирует пешкой '+square_names(new_control))
+            facts.append({'type':'pawn_control','squares':new_control})
     if mover.piece_type==chess.ROOK:
         file=chess.square_file(alt.to_square)
         if not any(chess.square_file(p)==file for c in [True,False] for p in after.pieces(chess.PAWN,c)):
@@ -243,7 +254,11 @@ def _alternative_idea(before,played,alt,data,actual_line,line,delta,primary,colo
         if enemy_b<enemy_a:
             hints.append(f'ограничивает свободу фигур соперника ({enemy_b} ходов против {enemy_a} в сравниваемом горизонте)')
             facts.append({'type':'opponent_mobility','actual':enemy_a,'alternative':enemy_b})
-    text=f"{san} — "+'; '.join(hints[:3])+'.' if hints else f'{san} сохраняет более устойчивый результат в анализируемой линии; проверенной единственной позиционной причины не найдено.'
+    # Keep a square-specific difference visible even when all alternatives save material.
+    visible=hints[:3]
+    specific=[hint for hint in hints if hint.startswith(('дополнительно контролирует пешкой','поддерживает'))]
+    if specific and len(hints)>3:visible[-1]=specific[0]
+    text=f"{san} — "+'; '.join(visible)+'.' if hints else f'{san} сохраняет более устойчивый результат в анализируемой линии; проверенной единственной позиционной причины не найдено.'
     if len(line['san'])>1:text+=f" Отличие продолжения: соперник отвечает {line['san'][1]}"+(' → '+line['san'][2] if len(line['san'])>2 else '')+'.'
     return text,facts
 

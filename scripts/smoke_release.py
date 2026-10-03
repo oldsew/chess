@@ -16,7 +16,7 @@ def smoke(command: list[str], output: Path):
         variables["ADAPTIVE_CHESS_DATA_DIR"] = temp
         # Qt offscreen still constructs and paints the actual MainWindow.
         variables["QT_QPA_PLATFORM"] = "offscreen"
-        for stage, resume, complete in [("first-run", False, False), ("resume", True, False), ("completion", False, True), ("polish", False, False), ("gameplay", False, False), ('learning',False,False), ('learning-resume',True,False), ('visual-100',False,False), ('visual-125',False,False), ('visual-150',False,False)]:
+        for stage, resume, complete in [("first-run", False, False), ("resume", True, False), ("completion", False, True), ("polish", False, False), ("gameplay", False, False), ('learning',False,False), ('learning-resume',True,False), ('visual-100',False,False), ('visual-125',False,False), ('visual-150',False,False), ('explanations',False,False)]:
             report = output / f"{stage}.json"
             if report.exists():
                 report.unlink()
@@ -37,6 +37,10 @@ def smoke(command: list[str], output: Path):
                 args.append('--smoke-visual')
                 variables['QT_SCALE_FACTOR'] = str(int(stage.split('-')[1])/100)
                 variables['ADAPTIVE_CHESS_DATA_DIR'] = str(Path(temp) / stage)
+            if stage=='explanations':
+                args.append('--smoke-explanations')
+                variables['QT_SCALE_FACTOR']='1'
+                variables['ADAPTIVE_CHESS_DATA_DIR']=str(Path(temp)/stage)
             try:
                 process = subprocess.run(args, env=variables, timeout=100, capture_output=True, text=True)
                 (output / f"{stage}.stderr.txt").write_text(process.stderr, encoding="utf-8")
