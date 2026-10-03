@@ -34,52 +34,110 @@
     {
       "elo": 400,
       "skill_level": 20,
-      "inaccuracy_probability": 0.38,
-      "mistake_probability": 0.2,
-      "blunder_probability": 0.04,
-      "max_allowed_cpl": 220,
-      "candidate_move_temperature": 75,
-      "search_time": 0.18
+      "inaccuracy_probability": 0.5,
+      "mistake_probability": 0.25,
+      "blunder_probability": 0.015,
+      "max_allowed_cpl": 280,
+      "candidate_move_temperature": 240,
+      "search_time": 0.4,
+      "multipv": 20,
+      "positional_bias": 1.0
+    },
+    {
+      "elo": 600,
+      "skill_level": 20,
+      "inaccuracy_probability": 0.48,
+      "mistake_probability": 0.24,
+      "blunder_probability": 0.012,
+      "max_allowed_cpl": 275,
+      "candidate_move_temperature": 210,
+      "search_time": 0.42,
+      "multipv": 20,
+      "positional_bias": 0.95
+    },
+    {
+      "elo": 800,
+      "skill_level": 20,
+      "inaccuracy_probability": 0.46,
+      "mistake_probability": 0.21,
+      "blunder_probability": 0.008,
+      "max_allowed_cpl": 270,
+      "candidate_move_temperature": 180,
+      "search_time": 0.44,
+      "multipv": 18,
+      "positional_bias": 0.9
     },
     {
       "elo": 1000,
       "skill_level": 20,
-      "inaccuracy_probability": 0.27,
-      "mistake_probability": 0.12,
-      "blunder_probability": 0.02,
-      "max_allowed_cpl": 160,
-      "candidate_move_temperature": 45,
-      "search_time": 0.25
+      "inaccuracy_probability": 0.38,
+      "mistake_probability": 0.15,
+      "blunder_probability": 0.004,
+      "max_allowed_cpl": 250,
+      "candidate_move_temperature": 145,
+      "search_time": 0.45,
+      "multipv": 16,
+      "positional_bias": 0.7
+    },
+    {
+      "elo": 1200,
+      "skill_level": 20,
+      "inaccuracy_probability": 0.29,
+      "mistake_probability": 0.085,
+      "blunder_probability": 0.002,
+      "max_allowed_cpl": 220,
+      "candidate_move_temperature": 95,
+      "search_time": 0.45,
+      "multipv": 14,
+      "positional_bias": 0.4
+    },
+    {
+      "elo": 1400,
+      "skill_level": 20,
+      "inaccuracy_probability": 0.2,
+      "mistake_probability": 0.045,
+      "blunder_probability": 0.001,
+      "max_allowed_cpl": 185,
+      "candidate_move_temperature": 60,
+      "search_time": 0.45,
+      "multipv": 12,
+      "positional_bias": 0.2
     },
     {
       "elo": 1600,
       "skill_level": 20,
-      "inaccuracy_probability": 0.16,
-      "mistake_probability": 0.05,
-      "blunder_probability": 0.005,
-      "max_allowed_cpl": 110,
-      "candidate_move_temperature": 24,
-      "search_time": 0.4
+      "inaccuracy_probability": 0.15,
+      "mistake_probability": 0.02,
+      "blunder_probability": 0,
+      "max_allowed_cpl": 130,
+      "candidate_move_temperature": 32,
+      "search_time": 0.45,
+      "multipv": 10,
+      "positional_bias": 0.1
     },
     {
       "elo": 2200,
       "skill_level": 20,
       "inaccuracy_probability": 0.06,
-      "mistake_probability": 0.01,
-      "blunder_probability": 0.0,
-      "max_allowed_cpl": 65,
+      "mistake_probability": 0.005,
+      "blunder_probability": 0,
+      "max_allowed_cpl": 70,
       "candidate_move_temperature": 12,
-      "search_time": 0.7
+      "search_time": 0.7,
+      "multipv": 8,
+      "positional_bias": 0
     },
     {
       "elo": 2800,
       "skill_level": 20,
       "inaccuracy_probability": 0.02,
-      "mistake_probability": 0.0,
-      "blunder_probability": 0.0,
+      "mistake_probability": 0,
+      "blunder_probability": 0,
       "max_allowed_cpl": 40,
       "candidate_move_temperature": 5,
-      "search_time": 1.0
+      "search_time": 1.0,
+      "multipv": 8,
+      "positional_bias": 0
     }
   ],
   "think_times": {
@@ -102,5 +160,47 @@
     "min_cpl": 40,
     "extra_depth": 2,
     "time_limit": 0.25
+  },
+  "selection": {
+    "bands_cp": [
+      50,
+      150,
+      250
+    ],
+    "close_narrowing_rating": 1600,
+    "unique_best_gap_cp": 100
+  },
+  "difficulty": {
+    "base_offsets": [
+      [
+        400,
+        40
+      ],
+      [
+        800,
+        50
+      ],
+      [
+        1000,
+        70
+      ],
+      [
+        1200,
+        90
+      ],
+      [
+        1400,
+        100
+      ],
+      [
+        2800,
+        100
+      ]
+    ],
+    "minimum_effective_offset": 20,
+    "hopeless_streak": 2,
+    "hopeless_accuracy": 65,
+    "hopeless_cpl": 90,
+    "hopeless_rating_drop_cap": 8
   }
 }

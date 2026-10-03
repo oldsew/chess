@@ -12,7 +12,7 @@ from PySide6.QtWidgets import (QComboBox, QDialog, QHBoxLayout, QInputDialog,
     QLabel, QListWidget, QMainWindow, QMessageBox, QPushButton, QSplitter, QTableWidget,
     QTableWidgetItem, QTextEdit, QVBoxLayout, QWidget, QListWidgetItem)
 
-from app.config.settings import Settings
+from app.config.settings import Settings, TUNING
 from app.database.store import Store
 from app.services.engine import EngineService
 from app.services.session import Session
@@ -28,6 +28,8 @@ from app.ui.clocks import ClockPanel
 from app.ui.motion import system_motion_enabled
 from app.services.material import MaterialSnapshot
 from app.ui.material import MaterialStrip
+from app.services.calibration import GameCalibration
+from app.adaptive.selector import BehaviorProfile
 
 log = logging.getLogger(__name__)
 STYLE = """
@@ -74,6 +76,7 @@ class MainWindow(QMainWindow):
         self.worker = None
         self.analysis_game = None
         self.last_selection = None
+        self.calibration = None
         self.dialogs = []
         self.setStyleSheet(STYLE)
         self._build_ui()
@@ -329,6 +332,8 @@ class MainWindow(QMainWindow):
         if self._end_notified == self.game.database_id:
             return
         self._end_notified = self.game.database_id
+        if self.calibration:
+            self.calibration.complete(self.game)
         self.invalidate_worker()
         self.busy = False
         self.navigator.current()
@@ -349,10 +354,14 @@ class MainWindow(QMainWindow):
         if not self.settings.values["developer_mode"]:
             return
         profile = self.store.profile()
+        behavior = BehaviorProfile.for_rating(self.game.bot_rating if self.game else profile.target)
         data = {"player_rating": profile.rating, "rating_confidence": profile.confidence,
                 "target_bot_rating": self.game.bot_rating if self.game else profile.target,
-                "difficulty_offset": profile.offset, "Stockfish": {"Threads": 1, "Hash": 64, "MultiPV": 8}}
+                "difficulty_offset": profile.difficulty_offset,
+                "stored_offset_adjustment": profile.offset - TUNING['default_offset'],
+                "Stockfish": {"Threads": 1, "Hash": 64, "Skill Level": behavior.skill_level, "MultiPV": behavior.multipv}}
         data["position_indicator"] = self.indicator.debug
+        data['bot_game_diagnostics'] = self.calibration.summary() if self.calibration else {}
         if self.last_selection:
             data.update({"profile": self.last_selection.profile, "candidates": self.last_selection.candidates,
                          "chosen": self.last_selection.move.uci(), "complexity": self.last_selection.complexity})
@@ -380,6 +389,7 @@ class MainWindow(QMainWindow):
         self._pending_result = None
         self._end_notified = None
         self.session.start(color, time_control(self.time_combo.currentData()))
+        self.calibration = GameCalibration(self.directory,self.game)
         self.settings.values['time_control'] = self.time_combo.currentData()
         self.settings.save()
         self.last_selection = None
@@ -403,6 +413,7 @@ class MainWindow(QMainWindow):
                 self._pending_result = None
                 self._end_notified = None
                 self.session.resume(game)
+                self.calibration = GameCalibration(self.directory,self.game)
                 self.refresh()
                 self.advance()
         except Exception as error:
@@ -431,6 +442,11 @@ class MainWindow(QMainWindow):
             if not self.session.play(move):
                 self.handle_timeout()
                 return
+            if self.calibration:
+                if before.turn != self.game.player_color and self.last_selection and self.last_selection.move == move:
+                    self.calibration.record(self.game,self.last_selection)
+                if self.game.result != '*':
+                    self.calibration.complete(self.game)
             self.invalidate_worker()
             if self.game.result != '*':
                 self._end_notified = self.game.database_id
@@ -517,6 +533,8 @@ class MainWindow(QMainWindow):
             try:
                 moves, metrics = value
                 profile = self.session.complete(self.analysis_game, moves, metrics)
+                calibration = self.calibration if self.calibration and self.calibration.metadata['game_id'] == self.analysis_game.database_id else GameCalibration(self.directory,self.analysis_game)
+                calibration.complete(self.analysis_game,metrics)
                 self.refresh()
                 if self.game and self.analysis_game.database_id == self.game.database_id and (self.board.animating or self.board.presenting_end):
                     self._pending_result = (self.analysis_game, profile, metrics)
@@ -600,6 +618,8 @@ class MainWindow(QMainWindow):
             if QMessageBox.question(self, "Завершить партию", "Вы хотите сдаться?") == QMessageBox.Yes and self.game.result == '*' and not self.busy:
                 self.invalidate_worker()
                 self.session.resign()
+                if self.calibration:
+                    self.calibration.complete(self.game)
                 self._end_notified = self.game.database_id
                 self.sounds.set_enabled(self.settings.values["sound"])
                 self.sounds.play("end")

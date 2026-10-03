@@ -13,7 +13,8 @@ def engine():
 def test_real_engine_returns_legal_candidates_and_stops(engine):
     result=engine.choose(chess.Board(),1100,natural_delay=False)
     assert result.move in chess.Board().legal_moves
-    assert len(result.candidates)==8
+    from app.adaptive.selector import BehaviorProfile
+    assert len(result.candidates)==BehaviorProfile.for_rating(1100).multipv
     process=engine._engine
     engine.close()
     assert process.returncode.result(timeout=5)==0

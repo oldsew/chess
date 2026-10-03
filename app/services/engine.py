@@ -59,12 +59,14 @@ class EngineService:
             profile = BehaviorProfile.for_rating(rating)
             self._configure({"Skill Level": profile.skill_level, "UCI_LimitStrength": False})
             infos = self._analyse(board, chess.engine.Limit(time=profile.search_time),
-                                  multipv=min(TUNING["multipv"], board.legal_moves.count()))
+                                  multipv=min(profile.multipv, board.legal_moves.count()))
             if on_evaluation and infos:
                 on_evaluation(LiveEvaluation.from_info(board, infos[0]))
             candidates = [Candidate(info["pv"][0], score_cp(info["score"], board.turn),
                                     info["score"].pov(board.turn).mate()) for info in infos if info.get("pv")]
             selected = select_move(board, candidates, rating)
+            selected.profile['actual_multipv'] = len(infos)
+            selected.profile['search_depth'] = infos[0].get('depth',0) if infos else 0
             if natural_delay:
                 self.cancelled.wait(max(0, selected.delay - (time.monotonic() - started)))
             if self.cancelled.is_set():

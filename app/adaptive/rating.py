@@ -16,7 +16,14 @@ class PlayerProfile:
 
     @property
     def target(self) -> float:
-        return self.rating + self.offset
+        return self.rating + self.difficulty_offset
+
+    @property
+    def difficulty_offset(self) -> float:
+        # Existing stored offsets keep their adjustment around 100; no profile migration/reset.
+        base = base_offset(self.rating)
+        return clamp(base + self.offset - TUNING['default_offset'],
+                     TUNING['difficulty']['minimum_effective_offset'],TUNING['max_offset'])
 
 
 @dataclass
@@ -35,6 +42,21 @@ class RatingEvidence:
 
 def clamp(value, low, high):
     return max(low, min(high, value))
+
+
+def base_offset(rating):
+    points = TUNING['difficulty']['base_offsets']
+    if rating <= points[0][0]:
+        return points[0][1]
+    for (low,a),(high,b) in zip(points,points[1:]):
+        if rating <= high:
+            return a+(b-a)*(rating-low)/(high-low)
+    return points[-1][1]
+
+
+def hopeless(e):
+    cfg = TUNING['difficulty']
+    return e.score == 0 and e.moves >= 6 and e.accuracy < cfg['hopeless_accuracy'] and e.average_cpl > cfg['hopeless_cpl']
 
 
 def quality(e: RatingEvidence) -> float:
@@ -65,10 +87,14 @@ def update_rating(profile: PlayerProfile, bot_rating: float, evidence: RatingEvi
     # Very short games are weak evidence; resignation before any move should not affect calibration.
     reliability = min(1, evidence.moves / 12)
     delta = clamp(cap * signal * reliability, -cap, cap)
+    streak = TUNING['difficulty']['hopeless_streak']
+    ease_opponent = len(recent) >= streak and all(hopeless(e) for e in recent[-streak:])
+    if ease_opponent:
+        delta = max(delta,-TUNING['difficulty']['hopeless_rating_drop_cap'])
     rating = clamp(profile.rating + delta, TUNING["min_rating"], TUNING["max_rating"])
     offset = profile.offset
     last_five = recent[-5:]
-    if len(last_five) == 5 and all(e.score == 0 and e.accuracy < 65 for e in last_five):
+    if ease_opponent:
         offset -= cfg["offset_step"] * 2
     elif len(last_five) >= 3 and all(e.score == 1 and e.accuracy >= 80 for e in last_five[-3:]):
         offset += cfg["offset_step"]
