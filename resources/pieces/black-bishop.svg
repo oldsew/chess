@@ -1,31 +1,31 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 82">
 <defs>
-  <linearGradient id="body" x1="19" y1="18" x2="57" y2="65" gradientUnits="userSpaceOnUse">
-    <stop stop-color="#687482"/><stop offset=".34" stop-color="#394656"/>
-    <stop offset=".78" stop-color="#182230"/><stop offset="1" stop-color="#3a4858"/>
+  <linearGradient id="body" x1="12" y1="10" x2="61" y2="74" gradientUnits="userSpaceOnUse">
+    <stop stop-color="#71736f"/><stop offset=".34" stop-color="#444743"/>
+    <stop offset=".78" stop-color="#20231f"/><stop offset="1" stop-color="#42463e"/>
   </linearGradient>
   <radialGradient id="sphere" cx=".32" cy=".24" r=".83">
-    <stop stop-color="#82909f"/><stop offset=".56" stop-color="#435264"/><stop offset="1" stop-color="#192534"/>
+    <stop stop-color="#92958a"/><stop offset=".56" stop-color="#4b5046"/><stop offset="1" stop-color="#23271f"/>
   </radialGradient>
   <linearGradient id="rim" x1="0" y1="0" x2=".8" y2="1">
-    <stop stop-color="#bdc8d4" stop-opacity=".7"/><stop offset="1" stop-color="#bdc8d4" stop-opacity=".16"/>
+    <stop stop-color="#c4c8bb" stop-opacity=".7"/><stop offset="1" stop-color="#c4c8bb" stop-opacity=".16"/>
   </linearGradient>
-  <linearGradient id="shade"><stop stop-color="#14202e" stop-opacity=".5"/><stop offset="1" stop-color="#14202e" stop-opacity=".15"/></linearGradient>
-  <linearGradient id="ink"><stop stop-color="#14202e"/><stop offset="1" stop-color="#14202e"/></linearGradient>
-  <radialGradient id="shadow"><stop stop-color="#0c1420" stop-opacity=".24"/><stop offset="1" stop-color="#0c1420" stop-opacity="0"/></radialGradient>
+  <linearGradient id="shade"><stop stop-color="#191d17" stop-opacity=".5"/><stop offset="1" stop-color="#191d17" stop-opacity=".15"/></linearGradient>
+  <linearGradient id="ink"><stop stop-color="#191d17"/><stop offset="1" stop-color="#191d17"/></linearGradient>
+  <radialGradient id="shadow"><stop stop-color="#181c13" stop-opacity=".24"/><stop offset="1" stop-color="#181c13" stop-opacity="0"/></radialGradient>
 </defs>
-<ellipse cx="37" cy="76" rx="25" ry="4.5" fill="url(#shadow)"/>
-<g fill="url(#body)" stroke="#14202e" stroke-width="1.05" stroke-linejoin="round" stroke-linecap="round">
-<path d="M36 10 C32 14 23 20 23 28 C23 33 27 36 32 38 C32 45 30 51 25 58 H47 C42 51 40 45 40 38 C45 36 49 33 49 28 C49 20 40 14 36 10 Z"/>
-      <circle cx="36" cy="9" r="3" fill="url(#sphere)"/>
-      <path d="M33 17 L40 28" fill="none" stroke="url(#ink)" stroke-width="2.5"/>
-      <path d="M29 20 Q25 25 27 29 M28 34 Q34 37 40 35 M31 42 C33 47 30 52 29 54" fill="none" stroke="url(#rim)"/>
-      <path d="M30 38 Q36 40 42 38 L42 41 Q36 43 30 41 Z"/>
-      <path d="M28 56 Q36 58 44 56" fill="none" stroke="url(#rim)"/>
-<path d="M25 58 Q36 56 47 58 L49 61 Q36 65 23 61 Z"/>
-  <path d="M25 63 Q36 65 47 63 C48 66 51 68 53 71 Q36 77 19 71 C21 68 24 66 25 63 Z"/>
-  <path d="M23 69 Q36 73 49 69 L53 72 Q36 78 19 72 Z"/>
-  <path d="M26 60 Q36 62 46 60 M26 65 Q35 68 46 65 M23 72 Q36 75 49 72" fill="none" stroke="url(#rim)" stroke-width=".9"/>
-  <path d="M26 63 Q36 66 46 63" fill="none" stroke="url(#shade)" stroke-width=".8"/>
+<ellipse cx="37" cy="76" rx="29" ry="4.5" fill="url(#shadow)"/>
+<g fill="url(#body)" stroke="#191d17" stroke-width="1.05" stroke-linejoin="round" stroke-linecap="round">
+<path d="M36 11 C30 16 19 22 19 29 C19 35 26 39 30 40 C30 46 26 53 21 58 H51 C46 53 42 46 42 40 C46 39 53 35 53 29 C53 22 42 16 36 11 Z"/>
+      <circle cx="36" cy="10" r="3.5" fill="url(#sphere)"/>
+      <path d="M32 18 L40 29" fill="none" stroke="url(#ink)" stroke-width="3"/>
+      <path d="M26 23 Q22 29 27 33 M25 36 Q36 40 47 36 M30 44 Q31 49 25 54" fill="none" stroke="url(#rim)"/>
+      <path d="M26 40 Q36 43 46 40 L46 44 Q36 47 26 44 Z"/>
+      <path d="M25 56 Q36 60 47 56" fill="none" stroke="url(#rim)"/>
+<path d="M22 58 Q36 56 50 58 L53 62 Q36 67 19 62 Z"/>
+  <path d="M22 64 Q36 67 50 64 Q52 67 58 71 Q36 79 14 71 Q20 67 22 64 Z"/>
+  <path d="M18 70 Q36 77 54 70 L58 73 Q36 81 14 73 Z"/>
+  <path d="M23 60 Q36 63 49 60 M24 66 Q36 71 49 66 M19 73 Q36 78 53 73" fill="none" stroke="url(#rim)" stroke-width="1"/>
+  <path d="M23 64 Q36 68 49 64" fill="none" stroke="url(#shade)" stroke-width="1"/>
 </g>
 </svg>

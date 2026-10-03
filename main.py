@@ -21,6 +21,7 @@ def main() -> int:
     parser.add_argument("--smoke-polish", action="store_true")
     parser.add_argument("--smoke-gameplay", action="store_true")
     parser.add_argument("--smoke-learning", action="store_true")
+    parser.add_argument("--smoke-visual", action="store_true")
     args = parser.parse_args()
     app = QApplication(sys.argv[:1])
     app.setOrganizationName("AdaptiveChess")
@@ -40,7 +41,10 @@ def main() -> int:
         window = MainWindow(directory)
         window.show()
         if args.smoke_test:
-            if args.smoke_learning:
+            if args.smoke_visual:
+                from app.ui.smoke_visual import attach_visual_smoke
+                window.smoke_timer = attach_visual_smoke(app,window,args.smoke_test)
+            elif args.smoke_learning:
                 from app.ui.smoke_learning import attach_learning_smoke
                 window.smoke_timer = attach_learning_smoke(app, window, args.smoke_test, args.smoke_resume)
             elif args.smoke_gameplay:

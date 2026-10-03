@@ -10,7 +10,7 @@ import chess
 from PySide6.QtCore import QThreadPool, QTimer, Qt, Slot
 from PySide6.QtWidgets import (QComboBox, QDialog, QHBoxLayout, QInputDialog,
     QLabel, QListWidget, QMainWindow, QMessageBox, QPushButton, QSplitter, QTableWidget,
-    QTableWidgetItem, QTextEdit, QVBoxLayout, QWidget, QListWidgetItem)
+    QTableWidgetItem, QTextEdit, QVBoxLayout, QWidget, QListWidgetItem, QScrollArea)
 
 from app.config.settings import Settings, TUNING
 from app.database.store import Store
@@ -30,28 +30,9 @@ from app.services.material import MaterialSnapshot
 from app.ui.material import MaterialStrip
 from app.services.calibration import GameCalibration
 from app.adaptive.selector import BehaviorProfile
+from app.ui.style import STYLE, show_advantage, soften_primary_button
 
 log = logging.getLogger(__name__)
-STYLE = """
-QWidget { background: #171e29; color: #e6ecf4; font-family: 'Segoe UI'; font-size: 14px; }
-QLabel#title { font-size: 25px; font-weight: 600; }
-QLabel#subtitle { color: #9daabd; }
-QPushButton { background: #293647; border: 1px solid #39495f; padding: 10px 16px; border-radius: 6px; }
-QPushButton:hover { background: #36485e; }
-QPushButton:disabled { color: #657388; background: #202a38; }
-QPushButton#primary { background: #287d74; border-color: #41a99b; }
-QComboBox, QSpinBox { padding: 7px; background: #293647; border: 1px solid #39495f; }
-QListWidget, QTextEdit, QTableWidget { background: #1e2836; border: 1px solid #334154; padding: 5px; }
-QListWidget::item:selected { background: #345459; color: #f1f5f7; }
-QTableView { selection-background-color: #345459; selection-color: #f1f5f7; }
-QHeaderView::section { background: #293647; padding: 6px; border: 1px solid #39495f; }
-QSplitter::handle { background: #171e29; }
-QFrame#clockPanel { background: #202c3a; border: 1px solid #35455a; border-radius: 7px; }
-QFrame#clockPanel[active="true"] { background: #243e40; border-color: #60b6a8; }
-QLabel#clockOwner { color: #aebccd; font-size: 12px; background: transparent; }
-QLabel#clockTime { font-size: 25px; font-weight: 600; background: transparent; }
-QLabel#positionIndicator { color: #bdd5ce; padding: 7px 0; font-size: 13px; }
-"""
 
 
 class MainWindow(QMainWindow):
@@ -82,6 +63,7 @@ class MainWindow(QMainWindow):
         self.dialogs = []
         self.setStyleSheet(STYLE)
         self._build_ui()
+        self.setMinimumSize(620, 490)
         self.apply_settings()
         self.refresh()
         self.clock_timer = QTimer(self)
@@ -98,16 +80,19 @@ class MainWindow(QMainWindow):
         root = QWidget()
         self.setCentralWidget(root)
         layout = QVBoxLayout(root)
-        layout.setContentsMargins(24, 20, 24, 20)
+        layout.setContentsMargins(18, 14, 18, 14)
+        layout.setSpacing(6)
         title = QLabel("Adaptive Chess")
         title.setObjectName("title")
         layout.addWidget(title)
         subtitle = QLabel("Чуть сильнее. С каждой партией ближе.")
+        self.subtitle = subtitle
         subtitle.setObjectName("subtitle")
         layout.addWidget(subtitle)
         menu = QHBoxLayout()
         self.new_button = QPushButton("Новая партия")
         self.new_button.setObjectName("primary")
+        soften_primary_button(self.new_button)
         self.new_button.clicked.connect(self.new_game)
         self.resume_button = QPushButton("Продолжить")
         self.resume_button.clicked.connect(self.resume_game)
@@ -123,6 +108,7 @@ class MainWindow(QMainWindow):
         layout.addLayout(menu)
         splitter = QSplitter()
         self.board = ChessBoard()
+        self.board.setMinimumSize(300, 300)
         self.board.move_requested.connect(self.human_move)
         self.board.previous_requested.connect(self.previous_position)
         self.board.next_requested.connect(self.next_position)
@@ -152,6 +138,18 @@ class MainWindow(QMainWindow):
         self.position_label.setObjectName('positionIndicator')
         self.position_label.setWordWrap(True)
         side_layout.addWidget(self.position_label)
+        # Keep clocks, status and navigation fixed. Only setup/move rows scroll on small screens.
+        outer_side = side_layout
+        side_body = QWidget()
+        side_layout = QVBoxLayout(side_body)
+        side_layout.setContentsMargins(0,0,0,0)
+        side_layout.setSpacing(6)
+        setup_scroll = QScrollArea()
+        setup_scroll.setObjectName('sidebarScroll')
+        setup_scroll.setWidgetResizable(True)
+        setup_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        setup_scroll.setWidget(side_body)
+        outer_side.addWidget(setup_scroll,1)
         side_layout.addWidget(QLabel('Новая партия · цвет и время'))
         self.color_combo = QComboBox()
         self.color_combo.setAccessibleName('Цвет для новой партии')
@@ -168,8 +166,10 @@ class MainWindow(QMainWindow):
         side_layout.addWidget(self.control_label)
         side_layout.addWidget(QLabel("Ходы партии"))
         self.move_list = QListWidget()
+        self.move_list.setMinimumHeight(55)
         self.move_list.itemClicked.connect(self.select_position)
         side_layout.addWidget(self.move_list, 1)
+        side_layout = outer_side
         navigation = QHBoxLayout()
         self.previous_button = QPushButton('←')
         self.previous_button.setToolTip('Предыдущий ход (Left на доске)')
@@ -206,6 +206,13 @@ class MainWindow(QMainWindow):
         self.footer = QLabel("Сложность подстраивается автоматически. Первые партии — калибровка.")
         self.footer.setObjectName("subtitle")
         layout.addWidget(self.footer)
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        if hasattr(self,'footer'):
+            roomy = event.size().height() >= 660
+            self.subtitle.setVisible(roomy)
+            self.footer.setVisible(roomy)
 
     def apply_settings(self):
         values = self.settings.values
@@ -251,7 +258,7 @@ class MainWindow(QMainWindow):
                 self._last_clock_save = time.monotonic()
         self.update_clocks()
 
-    def refresh(self, *, animate_move=False):
+    def refresh(self, *, animate_move=False, animate_history=False):
         active = self.game is not None and self.game.result == '*'
         viewing = self.navigator.viewing
         end_effect = self.board.presenting_end
@@ -268,11 +275,14 @@ class MainWindow(QMainWindow):
         self.next_button.setEnabled(viewing and not end_effect)
         self.current_button.setEnabled(viewing and not end_effect)
         self.position_label.setVisible(not viewing)
+        show_advantage(self.position_label, self.indicator, active)
         self.position_label.setText(self.indicator.text if active else 'Партия завершена' if self.game else self.indicator.text)
         if self.game:
             self.board.player_color = self.game.player_color
             self.board.orientation = self.game.player_color
-            self.board.set_position(self.navigator.position(self.game.board), animate=animate_move and not viewing)
+            self.board.set_position(self.navigator.position(self.game.board),
+                                    animate=animate_history or (animate_move and not viewing),
+                                    celebrate=not animate_history)
             position = self.game.board.root()
             self.move_list.blockSignals(True)
             self.move_list.clear()
@@ -304,13 +314,13 @@ class MainWindow(QMainWindow):
     def previous_position(self):
         if self.game and not self.board.presenting_end:
             self.navigator.back(self.game.board)
-            self.refresh()
+            self.refresh(animate_history=True)
             self.board.setFocus()
 
     def next_position(self):
         if self.game and not self.board.presenting_end:
             self.navigator.forward(self.game.board)
-            self.refresh()
+            self.refresh(animate_history=True)
             self.board.setFocus()
 
     def current_position(self):
@@ -321,7 +331,7 @@ class MainWindow(QMainWindow):
     def select_position(self, item):
         if self.game and not self.board.presenting_end:
             self.navigator.select(item.data(Qt.UserRole), self.game.board)
-            self.refresh()
+            self.refresh(animate_history=True)
             self.board.setFocus()
 
     def invalidate_worker(self):
@@ -497,6 +507,7 @@ class MainWindow(QMainWindow):
         if token != self.token or self.closing or not self.game or self.game.result != '*' or value.fen != self.game.board.fen():
             return
         self.indicator.update(value, self.game.player_color)
+        show_advantage(self.position_label, self.indicator)
         if not self.navigator.viewing:
             self.position_label.setText(self.indicator.text)
         self.update_debug()

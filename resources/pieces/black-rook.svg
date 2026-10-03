@@ -1,29 +1,29 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 82">
 <defs>
-  <linearGradient id="body" x1="19" y1="18" x2="57" y2="65" gradientUnits="userSpaceOnUse">
-    <stop stop-color="#687482"/><stop offset=".34" stop-color="#394656"/>
-    <stop offset=".78" stop-color="#182230"/><stop offset="1" stop-color="#3a4858"/>
+  <linearGradient id="body" x1="12" y1="10" x2="61" y2="74" gradientUnits="userSpaceOnUse">
+    <stop stop-color="#71736f"/><stop offset=".34" stop-color="#444743"/>
+    <stop offset=".78" stop-color="#20231f"/><stop offset="1" stop-color="#42463e"/>
   </linearGradient>
   <radialGradient id="sphere" cx=".32" cy=".24" r=".83">
-    <stop stop-color="#82909f"/><stop offset=".56" stop-color="#435264"/><stop offset="1" stop-color="#192534"/>
+    <stop stop-color="#92958a"/><stop offset=".56" stop-color="#4b5046"/><stop offset="1" stop-color="#23271f"/>
   </radialGradient>
   <linearGradient id="rim" x1="0" y1="0" x2=".8" y2="1">
-    <stop stop-color="#bdc8d4" stop-opacity=".7"/><stop offset="1" stop-color="#bdc8d4" stop-opacity=".16"/>
+    <stop stop-color="#c4c8bb" stop-opacity=".7"/><stop offset="1" stop-color="#c4c8bb" stop-opacity=".16"/>
   </linearGradient>
-  <linearGradient id="shade"><stop stop-color="#14202e" stop-opacity=".5"/><stop offset="1" stop-color="#14202e" stop-opacity=".15"/></linearGradient>
-  <linearGradient id="ink"><stop stop-color="#14202e"/><stop offset="1" stop-color="#14202e"/></linearGradient>
-  <radialGradient id="shadow"><stop stop-color="#0c1420" stop-opacity=".24"/><stop offset="1" stop-color="#0c1420" stop-opacity="0"/></radialGradient>
+  <linearGradient id="shade"><stop stop-color="#191d17" stop-opacity=".5"/><stop offset="1" stop-color="#191d17" stop-opacity=".15"/></linearGradient>
+  <linearGradient id="ink"><stop stop-color="#191d17"/><stop offset="1" stop-color="#191d17"/></linearGradient>
+  <radialGradient id="shadow"><stop stop-color="#181c13" stop-opacity=".24"/><stop offset="1" stop-color="#181c13" stop-opacity="0"/></radialGradient>
 </defs>
-<ellipse cx="37" cy="76" rx="25" ry="4.5" fill="url(#shadow)"/>
-<g fill="url(#body)" stroke="#14202e" stroke-width="1.05" stroke-linejoin="round" stroke-linecap="round">
-<path d="M21 13 Q24 12 28 13 V21 H33 V13 H39 V21 H44 V13 Q48 12 51 13 V28 Q48 31 44 33 L45 50 Q45 54 49 58 H23 Q27 54 27 50 L28 33 Q24 31 21 28 Z"/>
-      <path d="M22 27 Q36 30 50 27 L49 31 Q36 35 23 31 Z"/>
-      <path d="M24 15 V24 M30 36 L29 49 Q29 53 27 55 M28 55 Q36 57 44 55" fill="none" stroke="url(#rim)"/>
-      <path d="M43 35 L44 50" fill="none" stroke="url(#shade)" stroke-width="1.7"/>
-<path d="M25 58 Q36 56 47 58 L49 61 Q36 65 23 61 Z"/>
-  <path d="M25 63 Q36 65 47 63 C48 66 51 68 53 71 Q36 77 19 71 C21 68 24 66 25 63 Z"/>
-  <path d="M23 69 Q36 73 49 69 L53 72 Q36 78 19 72 Z"/>
-  <path d="M26 60 Q36 62 46 60 M26 65 Q35 68 46 65 M23 72 Q36 75 49 72" fill="none" stroke="url(#rim)" stroke-width=".9"/>
-  <path d="M26 63 Q36 66 46 63" fill="none" stroke="url(#shade)" stroke-width=".8"/>
+<ellipse cx="37" cy="76" rx="29" ry="4.5" fill="url(#shadow)"/>
+<g fill="url(#body)" stroke="#191d17" stroke-width="1.05" stroke-linejoin="round" stroke-linecap="round">
+<path d="M16 14 H25 V22 H31 V14 H41 V22 H47 V14 H56 V30 Q53 33 49 34 L49 49 Q49 53 53 58 H19 Q23 53 23 49 V34 Q19 33 16 30 Z"/>
+      <path d="M17 28 Q36 31 55 28 L53 34 Q36 38 19 34 Z"/>
+      <path d="M20 16 V26 M27 38 V49 Q27 52 24 55 M22 56 Q36 60 50 56" fill="none" stroke="url(#rim)"/>
+      <path d="M45 38 V49 Q45 53 48 55" fill="none" stroke="url(#shade)" stroke-width="2"/>
+<path d="M22 58 Q36 56 50 58 L53 62 Q36 67 19 62 Z"/>
+  <path d="M22 64 Q36 67 50 64 Q52 67 58 71 Q36 79 14 71 Q20 67 22 64 Z"/>
+  <path d="M18 70 Q36 77 54 70 L58 73 Q36 81 14 73 Z"/>
+  <path d="M23 60 Q36 63 49 60 M24 66 Q36 71 49 66 M19 73 Q36 78 53 73" fill="none" stroke="url(#rim)" stroke-width="1"/>
+  <path d="M23 64 Q36 68 49 64" fill="none" stroke="url(#shade)" stroke-width="1"/>
 </g>
 </svg>

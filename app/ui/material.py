@@ -14,7 +14,7 @@ class MaterialStrip(QWidget):
         super().__init__()
         self.renderers = renderers
         self.setFixedHeight(30)
-        self.setMinimumWidth(360)
+        self.setMinimumWidth(300)
         self.snapshot = MaterialSnapshot((), (), 0)
         self.color = chess.BLACK
         self.player_color = chess.WHITE
@@ -33,7 +33,7 @@ class MaterialStrip(QWidget):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
         painter.setFont(QFont('Segoe UI', 9))
-        painter.setPen(QColor('#9daabd'))
+        painter.setPen(QColor('#aaa9a1'))
         painter.drawText(QRectF(8, 0, 132, 30), Qt.AlignVCenter, 'Потеряны ' + ('белые' if self.color else 'чёрные'))
         lost = self.snapshot.lost(self.color)
         x = 140.
@@ -43,7 +43,7 @@ class MaterialStrip(QWidget):
         scale = min(1., max(0., max_x - x - 22) / max(1, sum(widths)))
         if lost:
             painter.setPen(Qt.NoPen)
-            painter.setBrush(QColor('#607187'))
+            painter.setBrush(QColor('#74776c'))
             painter.drawRoundedRect(QRectF(x+3,3,22+sum(widths[:-1])*scale,24),4,4)
         for i, piece in enumerate(lost):
             self.renderers[('white' if self.color else 'black', piece)].render(painter, QRectF(x, 1, 24, 28))
@@ -52,6 +52,6 @@ class MaterialStrip(QWidget):
             painter.drawText(QRectF(x, 0, 24, 30), Qt.AlignVCenter, '—')
         if self.show_balance:
             value = self.snapshot.balance(self.player_color)
-            painter.setPen(QColor('#bdd5ce'))
+            painter.setPen(QColor('#c9ccba'))
             painter.drawText(QRectF(self.width() - 115, 0, 107, 30), Qt.AlignVCenter | Qt.AlignRight,
                              f'Материал {value:+d}' if value else 'Материал =')

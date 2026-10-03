@@ -86,6 +86,8 @@ def test_finished_game_updates_rating_and_opens_analysis(qtbot,tmp_path):
     qtbot.waitUntil(lambda: not window.busy,timeout=12000)
     assert window.store.history()[0]['rated']==1
     assert window.store.profile().games==1
+    # Analysis may finish while the last movement is still presenting. Wait for the result UI.
+    qtbot.waitUntil(lambda: bool(window.dialogs),timeout=3000)
     window.show_analysis(window.game.database_id)
     window.show_statistics()
     assert len(window.dialogs)>=3

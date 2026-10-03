@@ -147,7 +147,9 @@ def attach_learning_smoke(app,window,report_path,resume=False):
                 dialog = next(d for d in reversed(window.dialogs) if isinstance(d,AnalysisDialog))
                 assert dialog.variations.count() == 3 and dialog.advice.text() == notes['advice']
                 actual_game,actual_dialog = window.game.pgn(),dialog.game.pgn()
-                actual_position = dialog.board.board.fen()
+                actual_position = dialog.root_position.copy()
+                actual_position.push(dialog.game.board.move_stack[dialog.moves[dialog.selected_row]['ply']-1])
+                actual_position = actual_position.fen()
                 dialog.variations.setCurrentRow(0)
                 assert dialog.line_moves and not dialog.board.interactive
                 dialog.next.click()

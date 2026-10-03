@@ -128,10 +128,13 @@ def build_coaching(before, move, before_info, after_info, alternatives_info, col
     if confidence == 'fallback':
         # No evidence means no king-safety/pawn-structure stories or guessed tactical labels.
         reason = None
-    return {'version':1,'root_fen':before.fen(),'played_fen':after.fen(),
+    notes = {'version':2,'root_fen':before.fen(),'played_fen':after.fen(),
             'alternatives':[asdict(v) for v in alternatives],
             'response':asdict(response) if response else None,'reason':reason,'confidence':confidence,
             'advice':advice,'evidence':evidence,'mate_before':before_mate,'mate_after':after_mate,
             'before_cp':before_score.score(),'after_cp':after_score.score(),
             'before_mate_winning':before_winning if before_mate is not None else None,
             'after_mate_winning':after_winning if after_mate is not None else None}
+    from app.services.analysis_explainer import explain
+    notes['explanation'] = explain(before, move, notes, color)
+    return notes

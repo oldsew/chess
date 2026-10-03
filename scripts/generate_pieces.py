@@ -4,57 +4,55 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1] / 'resources/pieces'
 # A shared turned foot and neck vocabulary makes every silhouette part of one quiet set.
 SHAPES = {
-    'pawn': '''<path d="M30 38 C33 42 33 45 32 49 C31 53 28 56 26 58 H46 C44 56 41 53 40 49 C39 45 39 42 42 38 Z"/>
-      <path d="M28 37 Q36 40 44 37 L43 40 Q36 43 29 40 Z"/>
-      <circle cx="36" cy="28" r="9" fill="url(#sphere)"/>
-      <path d="M31 24 C32 22 34 21 37 21 M32 43 C34 48 32 52 30 54" fill="none" stroke="url(#rim)"/>
-      <path d="M28 57 Q36 59 44 57" fill="none" stroke="url(#rim)"/>''',
-    'rook': '''<path d="M21 13 Q24 12 28 13 V21 H33 V13 H39 V21 H44 V13 Q48 12 51 13 V28 Q48 31 44 33 L45 50 Q45 54 49 58 H23 Q27 54 27 50 L28 33 Q24 31 21 28 Z"/>
-      <path d="M22 27 Q36 30 50 27 L49 31 Q36 35 23 31 Z"/>
-      <path d="M24 15 V24 M30 36 L29 49 Q29 53 27 55 M28 55 Q36 57 44 55" fill="none" stroke="url(#rim)"/>
-      <path d="M43 35 L44 50" fill="none" stroke="url(#shade)" stroke-width="1.7"/>''',
-    'knight': '''<path d="M23 58 C24 50 28 45 35 41 L41 37 C39 32 35 29 30 28 L24 33 Q22 34 19 32 L14 29 Q13 27 15 24 L27 16 L29 10 Q30 8 32 11 L37 15 C48 15 55 24 56 36 C58 45 53 51 49 58 Z"/>
-      <path d="M35 18 C46 19 51 27 51 37 C52 44 48 49 45 53" fill="none" stroke="url(#shade)" stroke-width="3.2"/>
-      <path d="M31 18 C43 17 50 26 51 34 M28 46 Q33 41 38 40 M26 27 L31 24" fill="none" stroke="url(#rim)"/>
-      <path d="M39 21 L43 24 M43 27 L46 30 M45 34 L47 37" fill="none" stroke="url(#rim)" stroke-opacity=".55"/>
-      <circle cx="32.5" cy="23" r="1.7" fill="url(#ink)" stroke="none"/>
-      <path d="M16 28 Q19 29 21 28" fill="none" stroke-width=".8"/>
-      <path d="M27 56 Q37 58 47 56" fill="none" stroke="url(#rim)"/>''',
-    'bishop': '''<path d="M36 10 C32 14 23 20 23 28 C23 33 27 36 32 38 C32 45 30 51 25 58 H47 C42 51 40 45 40 38 C45 36 49 33 49 28 C49 20 40 14 36 10 Z"/>
-      <circle cx="36" cy="9" r="3" fill="url(#sphere)"/>
-      <path d="M33 17 L40 28" fill="none" stroke="url(#ink)" stroke-width="2.5"/>
-      <path d="M29 20 Q25 25 27 29 M28 34 Q34 37 40 35 M31 42 C33 47 30 52 29 54" fill="none" stroke="url(#rim)"/>
-      <path d="M30 38 Q36 40 42 38 L42 41 Q36 43 30 41 Z"/>
-      <path d="M28 56 Q36 58 44 56" fill="none" stroke="url(#rim)"/>''',
-    'queen': '''<path d="M20 22 L28 29 L31 20 L34 27 L36 13 L38 27 L41 20 L44 29 L52 22 L46 39 C42 44 42 51 49 58 H23 C30 51 30 44 26 39 Z"/>
-      <circle cx="36" cy="10" r="3" fill="url(#sphere)"/>
-      <circle cx="20" cy="19" r="3.2" fill="url(#sphere)"/>
-      <circle cx="31" cy="17" r="2.6" fill="url(#sphere)"/>
-      <circle cx="41" cy="17" r="2.6" fill="url(#sphere)"/>
-      <circle cx="52" cy="19" r="3.2" fill="url(#sphere)"/>
-      <path d="M26 38 Q36 41 46 38 L45 42 Q36 45 27 42 Z"/>
-      <path d="M27 30 L30 36 M29 40 Q36 42 43 40 M32 46 Q32 51 29 54 M28 56 Q36 58 44 56" fill="none" stroke="url(#rim)"/>''',
-    'king': '''<path d="M33.5 5 H38.5 V12 H45 V17 H38.5 V26 H33.5 V17 H27 V12 H33.5 Z"/>
-      <path d="M36 28 C29 21 21 24 21 30 C20 35 25 39 29 43 C32 49 29 54 23 58 H49 C43 54 40 49 43 43 C47 39 52 35 51 30 C51 24 43 21 36 28 Z"/>
-      <path d="M28 42 Q36 45 44 42 L43 46 Q36 49 29 46 Z"/>
-      <path d="M35 7 V13 H29 M25 28 Q23 32 28 37 M29 44 Q36 46 42 44 M31 49 Q32 52 29 55 M28 56 Q36 58 44 56" fill="none" stroke="url(#rim)"/>''',
+    'pawn': '''<path d="M26 39 Q22 38 24 35 Q36 32 48 35 Q50 38 46 39 C42 42 42 48 46 52 L50 58 H22 L26 52 C30 48 30 42 26 39 Z"/>
+      <ellipse cx="36" cy="26" rx="11.5" ry="11" fill="url(#sphere)"/>
+      <path d="M28 21 Q31 17 37 17 M27 36 Q36 39 45 36 M30 42 Q34 46 28 52 M26 56 Q36 59 46 56" fill="none" stroke="url(#rim)"/>
+      <path d="M42 41 Q40 47 46 53" fill="none" stroke="url(#shade)" stroke-width="2"/>''',
+    'rook': '''<path d="M16 14 H25 V22 H31 V14 H41 V22 H47 V14 H56 V30 Q53 33 49 34 L49 49 Q49 53 53 58 H19 Q23 53 23 49 V34 Q19 33 16 30 Z"/>
+      <path d="M17 28 Q36 31 55 28 L53 34 Q36 38 19 34 Z"/>
+      <path d="M20 16 V26 M27 38 V49 Q27 52 24 55 M22 56 Q36 60 50 56" fill="none" stroke="url(#rim)"/>
+      <path d="M45 38 V49 Q45 53 48 55" fill="none" stroke="url(#shade)" stroke-width="2"/>''',
+    'knight': '''<path d="M19 58 C20 48 26 42 34 38 L40 35 Q36 28 29 28 L23 34 Q19 36 15 32 L11 28 Q10 26 13 23 L25 15 L27 9 Q28 7 31 11 L37 15 C49 14 58 24 60 37 C61 47 55 54 52 58 Z"/>
+      <path d="M36 19 C47 19 54 28 55 38 Q56 47 48 54" fill="none" stroke="url(#shade)" stroke-width="4"/>
+      <path d="M29 18 Q45 16 52 30 M27 46 Q32 40 38 39 M26 26 L31 23 M24 56 Q37 60 49 56" fill="none" stroke="url(#rim)"/>
+      <path d="M39 22 L43 26 M43 29 L47 33 M46 36 L49 40" fill="none" stroke="url(#rim)" stroke-opacity=".5"/>
+      <circle cx="31" cy="23" r="1.9" fill="url(#ink)" stroke="none"/>
+      <path d="M13 28 Q17 30 20 28" fill="none" stroke-width=".8"/>''',
+    'bishop': '''<path d="M36 11 C30 16 19 22 19 29 C19 35 26 39 30 40 C30 46 26 53 21 58 H51 C46 53 42 46 42 40 C46 39 53 35 53 29 C53 22 42 16 36 11 Z"/>
+      <circle cx="36" cy="10" r="3.5" fill="url(#sphere)"/>
+      <path d="M32 18 L40 29" fill="none" stroke="url(#ink)" stroke-width="3"/>
+      <path d="M26 23 Q22 29 27 33 M25 36 Q36 40 47 36 M30 44 Q31 49 25 54" fill="none" stroke="url(#rim)"/>
+      <path d="M26 40 Q36 43 46 40 L46 44 Q36 47 26 44 Z"/>
+      <path d="M25 56 Q36 60 47 56" fill="none" stroke="url(#rim)"/>''',
+    'queen': '''<path d="M15 22 L25 30 L28 19 L33 27 L36 13 L39 27 L44 19 L47 30 L57 22 L49 39 Q44 43 45 49 Q46 54 53 58 H19 Q26 54 27 49 Q28 43 23 39 Z"/>
+      <circle cx="36" cy="10" r="3.5" fill="url(#sphere)"/>
+      <circle cx="15" cy="19" r="3.7" fill="url(#sphere)"/><circle cx="28" cy="16" r="3" fill="url(#sphere)"/>
+      <circle cx="44" cy="16" r="3" fill="url(#sphere)"/><circle cx="57" cy="19" r="3.7" fill="url(#sphere)"/>
+      <path d="M23 37 Q36 42 49 37 L47 43 Q36 47 25 43 Z"/>
+      <path d="M23 29 L27 35 M27 40 Q36 43 45 40 M30 47 Q30 51 25 55 M24 56 Q36 60 48 56" fill="none" stroke="url(#rim)"/>
+      <path d="M43 46 Q42 51 47 54" fill="none" stroke="url(#shade)" stroke-width="2"/>''',
+    'king': '''<path d="M33 5 H39 V12 H46 V18 H39 V25 H33 V18 H26 V12 H33 Z"/>
+      <path d="M36 27 C27 20 17 23 17 31 C17 37 24 41 28 45 Q31 51 20 58 H52 Q41 51 44 45 C48 41 55 37 55 31 C55 23 45 20 36 27 Z"/>
+      <path d="M24 42 Q36 47 48 42 L46 48 Q36 52 26 48 Z"/>
+      <path d="M35 7 V14 H28 M23 28 Q20 33 28 39 M27 45 Q36 48 44 45 M30 51 L26 55 M24 56 Q36 60 48 56" fill="none" stroke="url(#rim)"/>
+      <path d="M48 28 Q52 33 44 40" fill="none" stroke="url(#shade)" stroke-width="2"/>''',
 }
-BASE = '''<path d="M25 58 Q36 56 47 58 L49 61 Q36 65 23 61 Z"/>
-  <path d="M25 63 Q36 65 47 63 C48 66 51 68 53 71 Q36 77 19 71 C21 68 24 66 25 63 Z"/>
-  <path d="M23 69 Q36 73 49 69 L53 72 Q36 78 19 72 Z"/>
-  <path d="M26 60 Q36 62 46 60 M26 65 Q35 68 46 65 M23 72 Q36 75 49 72" fill="none" stroke="url(#rim)" stroke-width=".9"/>
-  <path d="M26 63 Q36 66 46 63" fill="none" stroke="url(#shade)" stroke-width=".8"/>'''
+BASE = '''<path d="M22 58 Q36 56 50 58 L53 62 Q36 67 19 62 Z"/>
+  <path d="M22 64 Q36 67 50 64 Q52 67 58 71 Q36 79 14 71 Q20 67 22 64 Z"/>
+  <path d="M18 70 Q36 77 54 70 L58 73 Q36 81 14 73 Z"/>
+  <path d="M23 60 Q36 63 49 60 M24 66 Q36 71 49 66 M19 73 Q36 78 53 73" fill="none" stroke="url(#rim)" stroke-width="1"/>
+  <path d="M23 64 Q36 68 49 64" fill="none" stroke="url(#shade)" stroke-width="1"/>''' 
 
 
 def generate():
     for color in ['white', 'black']:
         white = color == 'white'
-        palette = ['#fffaf0', '#f1e7d4', '#c9bda7', '#e2d6c0'] if white else ['#687482', '#394656', '#182230', '#3a4858']
-        outline = '#807361' if white else '#14202e'
-        rim = '#fffef8' if white else '#bdc8d4'
-        sphere = ['#fffdf6', '#eee1cb', '#beb097'] if white else ['#82909f', '#435264', '#192534']
+        palette = ['#fffaf0', '#f1e7d4', '#c9bda7', '#e2d6c0'] if white else ['#71736f', '#444743', '#20231f', '#42463e']
+        outline = '#807361' if white else '#191d17'
+        rim = '#fffef8' if white else '#c4c8bb'
+        sphere = ['#fffdf6', '#eee1cb', '#beb097'] if white else ['#92958a', '#4b5046', '#23271f']
         defs = f'''<defs>
-  <linearGradient id="body" x1="19" y1="18" x2="57" y2="65" gradientUnits="userSpaceOnUse">
+  <linearGradient id="body" x1="12" y1="10" x2="61" y2="74" gradientUnits="userSpaceOnUse">
     <stop stop-color="{palette[0]}"/><stop offset=".34" stop-color="{palette[1]}"/>
     <stop offset=".78" stop-color="{palette[2]}"/><stop offset="1" stop-color="{palette[3]}"/>
   </linearGradient>
@@ -66,12 +64,12 @@ def generate():
   </linearGradient>
   <linearGradient id="shade"><stop stop-color="{outline}" stop-opacity=".5"/><stop offset="1" stop-color="{outline}" stop-opacity=".15"/></linearGradient>
   <linearGradient id="ink"><stop stop-color="{outline}"/><stop offset="1" stop-color="{outline}"/></linearGradient>
-  <radialGradient id="shadow"><stop stop-color="#0c1420" stop-opacity=".24"/><stop offset="1" stop-color="#0c1420" stop-opacity="0"/></radialGradient>
+  <radialGradient id="shadow"><stop stop-color="#181c13" stop-opacity=".24"/><stop offset="1" stop-color="#181c13" stop-opacity="0"/></radialGradient>
 </defs>'''
         for name, shapes in SHAPES.items():
             svg = f'''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 82">
 {defs}
-<ellipse cx="37" cy="76" rx="25" ry="4.5" fill="url(#shadow)"/>
+<ellipse cx="37" cy="76" rx="29" ry="4.5" fill="url(#shadow)"/>
 <g fill="url(#body)" stroke="{outline}" stroke-width="1.05" stroke-linejoin="round" stroke-linecap="round">
 {shapes}
 {BASE}

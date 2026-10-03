@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 82">
 <defs>
-  <linearGradient id="body" x1="19" y1="18" x2="57" y2="65" gradientUnits="userSpaceOnUse">
+  <linearGradient id="body" x1="12" y1="10" x2="61" y2="74" gradientUnits="userSpaceOnUse">
     <stop stop-color="#fffaf0"/><stop offset=".34" stop-color="#f1e7d4"/>
     <stop offset=".78" stop-color="#c9bda7"/><stop offset="1" stop-color="#e2d6c0"/>
   </linearGradient>
@@ -12,19 +12,18 @@
   </linearGradient>
   <linearGradient id="shade"><stop stop-color="#807361" stop-opacity=".5"/><stop offset="1" stop-color="#807361" stop-opacity=".15"/></linearGradient>
   <linearGradient id="ink"><stop stop-color="#807361"/><stop offset="1" stop-color="#807361"/></linearGradient>
-  <radialGradient id="shadow"><stop stop-color="#0c1420" stop-opacity=".24"/><stop offset="1" stop-color="#0c1420" stop-opacity="0"/></radialGradient>
+  <radialGradient id="shadow"><stop stop-color="#181c13" stop-opacity=".24"/><stop offset="1" stop-color="#181c13" stop-opacity="0"/></radialGradient>
 </defs>
-<ellipse cx="37" cy="76" rx="25" ry="4.5" fill="url(#shadow)"/>
+<ellipse cx="37" cy="76" rx="29" ry="4.5" fill="url(#shadow)"/>
 <g fill="url(#body)" stroke="#807361" stroke-width="1.05" stroke-linejoin="round" stroke-linecap="round">
-<path d="M30 38 C33 42 33 45 32 49 C31 53 28 56 26 58 H46 C44 56 41 53 40 49 C39 45 39 42 42 38 Z"/>
-      <path d="M28 37 Q36 40 44 37 L43 40 Q36 43 29 40 Z"/>
-      <circle cx="36" cy="28" r="9" fill="url(#sphere)"/>
-      <path d="M31 24 C32 22 34 21 37 21 M32 43 C34 48 32 52 30 54" fill="none" stroke="url(#rim)"/>
-      <path d="M28 57 Q36 59 44 57" fill="none" stroke="url(#rim)"/>
-<path d="M25 58 Q36 56 47 58 L49 61 Q36 65 23 61 Z"/>
-  <path d="M25 63 Q36 65 47 63 C48 66 51 68 53 71 Q36 77 19 71 C21 68 24 66 25 63 Z"/>
-  <path d="M23 69 Q36 73 49 69 L53 72 Q36 78 19 72 Z"/>
-  <path d="M26 60 Q36 62 46 60 M26 65 Q35 68 46 65 M23 72 Q36 75 49 72" fill="none" stroke="url(#rim)" stroke-width=".9"/>
-  <path d="M26 63 Q36 66 46 63" fill="none" stroke="url(#shade)" stroke-width=".8"/>
+<path d="M26 39 Q22 38 24 35 Q36 32 48 35 Q50 38 46 39 C42 42 42 48 46 52 L50 58 H22 L26 52 C30 48 30 42 26 39 Z"/>
+      <ellipse cx="36" cy="26" rx="11.5" ry="11" fill="url(#sphere)"/>
+      <path d="M28 21 Q31 17 37 17 M27 36 Q36 39 45 36 M30 42 Q34 46 28 52 M26 56 Q36 59 46 56" fill="none" stroke="url(#rim)"/>
+      <path d="M42 41 Q40 47 46 53" fill="none" stroke="url(#shade)" stroke-width="2"/>
+<path d="M22 58 Q36 56 50 58 L53 62 Q36 67 19 62 Z"/>
+  <path d="M22 64 Q36 67 50 64 Q52 67 58 71 Q36 79 14 71 Q20 67 22 64 Z"/>
+  <path d="M18 70 Q36 77 54 70 L58 73 Q36 81 14 73 Z"/>
+  <path d="M23 60 Q36 63 49 60 M24 66 Q36 71 49 66 M19 73 Q36 78 53 73" fill="none" stroke="url(#rim)" stroke-width="1"/>
+  <path d="M23 64 Q36 68 49 64" fill="none" stroke="url(#shade)" stroke-width="1"/>
 </g>
 </svg>

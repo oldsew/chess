@@ -19,10 +19,18 @@ class MoveTransition:
     motions: tuple[PieceMotion, ...]
     captured: chess.Piece | None = None
     captured_square: int | None = None
+    reverse: bool = False
 
     @classmethod
     def between(cls, before: chess.Board, after: chess.Board) -> MoveTransition | None:
-        # Resumes, new games and analysis navigation are snapshots, not moves to animate.
+        # Reverse exactly one verified historical move; unrelated snapshots remain snapshots.
+        if len(before.move_stack) == len(after.move_stack) + 1:
+            forward = cls.between(after, before)
+            if forward:
+                motions = tuple(PieceMotion(m.promoted_piece or m.piece, m.destination, m.origin,
+                                           m.piece if m.promoted_piece else None) for m in forward.motions)
+                return cls(motions, forward.captured, forward.captured_square, True)
+            return None
         if len(after.move_stack) != len(before.move_stack) + 1 or after.move_stack[:-1] != before.move_stack:
             return None
         move = after.peek()

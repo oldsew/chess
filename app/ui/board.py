@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import chess
 from PySide6.QtCore import QPointF, QRectF, Qt, Signal, QVariantAnimation, QEasingCurve, QTimer
-from PySide6.QtGui import QColor, QFont, QPainter, QPen, QRadialGradient
+from PySide6.QtGui import QColor, QFont, QPainter, QPen, QRadialGradient, QPolygonF
 from PySide6.QtWidgets import QWidget
 from PySide6.QtSvg import QSvgRenderer
 from app.config.settings import resource_root
@@ -11,7 +11,7 @@ from app.config.gameplay import GAMEPLAY
 import math
 
 THEMES = {
-    "Сланец": ("#e3e7ed", "#71849a"),
+    "Сланец": ("#e5e1d9", "#8c928e"),
     "Лес": ("#e9ecd9", "#78917b"),
     "Песок": ("#f0e5d0", "#b49b7c"),
 }
@@ -49,6 +49,7 @@ class ChessBoard(QWidget):
         self._motion_start: QPointF | None = None
         self.transition: MoveTransition | None = None
         self.progress = 1.0
+        self.annotations = []
         self.animation = QVariantAnimation(self)
         self.animation.setDuration(MOVE_DURATION_MS)
         self.animation.setStartValue(0.0)
@@ -87,7 +88,7 @@ class ChessBoard(QWidget):
     def animating(self) -> bool:
         return self.transition is not None
 
-    def set_position(self, board: chess.Board, *, animate: bool = False):
+    def set_position(self, board: chess.Board, *, animate: bool = False, celebrate: bool = True):
         if board.fen() == self.board.fen() and board.move_stack == self.board.move_stack:
             # MainWindow can refresh twice during a move; keep the ongoing transition intact.
             self.update()
@@ -96,7 +97,7 @@ class ChessBoard(QWidget):
         self.animation.stop()
         self.mate_animation.stop()
         self.mate_progress = 0
-        self._mate_pending = animate and self.animations_enabled and board.is_checkmate()
+        self._mate_pending = animate and celebrate and self.animations_enabled and board.is_checkmate()
         self.transition = transition
         self._motion_start = None
         if transition and self._drop_start is not None:
@@ -148,11 +149,13 @@ class ChessBoard(QWidget):
     @property
     def capture_opacity(self) -> float:
         t = min(1.0, self.animation.currentTime() / MOVE_DURATION_MS / 0.9)
-        return 1 - t * t * (3 - 2 * t)
+        blend = t * t * (3 - 2 * t)
+        return blend if self.transition and self.transition.reverse else 1 - blend
 
     @property
     def promotion_blend(self) -> float:
-        t = max(0.0, min(1.0, (self.animation.currentTime() / MOVE_DURATION_MS - 0.6) / 0.4))
+        elapsed = self.animation.currentTime() / MOVE_DURATION_MS
+        t = max(0.0, min(1.0, elapsed / .4 if self.transition and self.transition.reverse else (elapsed - .6) / .4))
         return t * t * (3 - 2 * t)
 
     def motion_rect(self, index: int) -> QRectF:
@@ -178,6 +181,8 @@ class ChessBoard(QWidget):
         last_move = self.board.peek() if self.board.move_stack else None
         targets = {m.to_square for m in self.board.legal_moves if m.from_square == self.selected}
         moving_targets = {m.destination for m in self.transition.motions} if self.transition else set()
+        if self.transition and self.transition.reverse and self.transition.captured:
+            moving_targets.add(self.transition.captured_square)
         for square in chess.SQUARES:
             rect = self.square_rect(square)
             painter.fillRect(rect, QColor(light if (chess.square_rank(square) + chess.square_file(square)) % 2 else dark))
@@ -238,8 +243,26 @@ class ChessBoard(QWidget):
                 glow.setColorAt(1, QColor(230, 103, 98, 0))
                 painter.fillRect(rect, glow)
                 self._draw_piece(painter, self.board.piece_at(king), rect)
+        for origin, destination, role in self.annotations[:2]:
+            start, end = self.square_rect(origin).center(), self.square_rect(destination).center()
+            vector = end - start
+            length = math.hypot(vector.x(), vector.y())
+            if not length:
+                continue
+            direction = QPointF(vector.x()/length, vector.y()/length)
+            normal = QPointF(-direction.y(), direction.x())
+            cell = self.geometry_values()[2]
+            end -= direction * cell * .18
+            ink = QColor('#3c765a' if role == 'recommended' else '#a25d52')
+            ink.setAlpha(170)
+            painter.setPen(QPen(ink, cell * .045, Qt.SolidLine, Qt.RoundCap))
+            painter.drawLine(start + direction * cell * .12, end)
+            painter.setPen(Qt.NoPen)
+            painter.setBrush(ink)
+            painter.drawPolygon(QPolygonF([end, end-direction*cell*.17+normal*cell*.08,
+                                           end-direction*cell*.17-normal*cell*.08]))
         x, y, cell = self.geometry_values()
-        painter.setPen(QColor("#9daabd"))
+        painter.setPen(QColor("#aaa9a3"))
         painter.setFont(QFont("Segoe UI", 9))
         for i in range(8):
             file_index = i if self.orientation else 7 - i

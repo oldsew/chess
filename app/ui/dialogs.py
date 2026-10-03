@@ -5,11 +5,13 @@ import chess
 from PySide6.QtCore import Qt, QRect, QSize
 from PySide6.QtGui import QColor, QPainter, QPen
 from PySide6.QtWidgets import (QCheckBox, QComboBox, QDialog, QDialogButtonBox, QFormLayout,
-    QLabel, QSpinBox, QSplitter, QListWidget, QHBoxLayout, QHeaderView, QScrollArea, QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget, QPushButton)
+    QLabel, QSpinBox, QSplitter, QListWidget, QHBoxLayout, QHeaderView, QScrollArea, QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget, QPushButton, QTextEdit)
 
 from app.config.settings import DEFAULT_SETTINGS
 from app.ui.board import THEMES, ChessBoard
 from app.services.clocks import TIME_CONTROLS
+from app.ui.style import STYLE
+from app.ui.motion import system_motion_enabled
 
 
 class SettingsDialog(QDialog):
@@ -58,14 +60,14 @@ class RatingChart(QWidget):
     def paintEvent(self, event):
         p = QPainter(self)
         p.setRenderHint(QPainter.Antialiasing)
-        p.setPen(QColor("#9daabd"))
+        p.setPen(QColor("#aaa9a1"))
         if not self.ratings:
             p.drawText(self.rect(), Qt.AlignCenter, "График появится после первой партии")
             return
         low, high = min(self.ratings) - 30, max(self.ratings) + 30
         p.drawText(5, 18, str(round(high)))
         p.drawText(5, self.height() - 5, str(round(low)))
-        p.setPen(QPen(QColor("#66cfbf"), 2))
+        p.setPen(QPen(QColor("#a8bc91"), 2))
         def point(i, rating):
             from PySide6.QtCore import QPointF
             return QPointF(48 + i * (self.width() - 65) / max(1, len(self.ratings) - 1),
@@ -119,7 +121,9 @@ class AnalysisDialog(QDialog):
         super().__init__(parent)
         from app.services.game import GameState
         self.setWindowTitle("Разбор партии")
-        self.resize(1100, 760)
+        self.setStyleSheet(STYLE)
+        self.resize(1040, 700)
+        developer = bool(parent and getattr(parent, 'settings', None) and parent.settings.values['developer_mode'])
         layout = QVBoxLayout(self)
         self.moves = json.loads(row["analysis"] or "[]")
         self.game = GameState.from_pgn(row["pgn"],player_color=bool(row["player_color"]))
@@ -142,29 +146,57 @@ class AnalysisDialog(QDialog):
         self.board = ChessBoard()
         self.board.setMinimumSize(330,330)
         self.board.orientation = self.game.player_color
+        self.board.theme = parent.board.theme if parent and hasattr(parent, 'board') else 'Сланец'
+        self.board.animations_enabled = system_motion_enabled() and (not parent or not hasattr(parent,'settings') or parent.settings.values['animations'])
         self.board.set_position(self.game.board)
         split.addWidget(self.board)
         panel = QWidget()
+        panel.setObjectName('coachPanel')
         side = QVBoxLayout(panel)
+        side.setContentsMargins(12, 10, 12, 10)
+        side.setSpacing(6)
+        def heading(text):
+            label = QLabel(text)
+            label.setObjectName('sectionTitle')
+            side.addWidget(label)
         self.played_label = QLabel('Выберите ход в списке')
         self.played_label.setWordWrap(True)
-        self.played_label.setStyleSheet('font-size: 18px; font-weight: 600;')
-        side.addWidget(QLabel('Ваш ход'))
+        self.played_label.setObjectName('playedMove')
+        heading('Ваш ход')
         side.addWidget(self.played_label)
-        side.addWidget(QLabel('Что произошло'))
+        heading('Что произошло')
         self.summary = QLabel('Доска показывает фактическую партию.')
+        self.summary.setObjectName('coachSummary')
         self.summary.setWordWrap(True)
         self.summary.setTextFormat(Qt.PlainText)
         side.addWidget(self.summary)
-        side.addWidget(QLabel('Лучшие варианты · нажмите, чтобы посмотреть'))
         self.variations = VariationList()
+        heading('Почему это лучше')
+        self.recommendation = QLabel('')
+        self.recommendation.setObjectName('recommendation')
+        self.recommendation.setWordWrap(True)
+        self.recommendation.setTextFormat(Qt.PlainText)
+        side.addWidget(self.recommendation)
+        heading('Лучше было · нажмите вариант для просмотра')
         side.addWidget(self.variations,1)
-        side.addWidget(QLabel('Совет'))
+        self.response_label = QLabel('')
+        self.response_label.setWordWrap(True)
+        self.response_label.setTextFormat(Qt.PlainText)
+        side.addWidget(self.response_label)
+        self.advice_heading = QLabel('Совет')
+        self.advice_heading.setObjectName('sectionTitle')
+        side.addWidget(self.advice_heading)
         self.advice = QLabel('')
         self.advice.setWordWrap(True)
         self.advice.setTextFormat(Qt.PlainText)
-        self.advice.setStyleSheet('color: #bdd5ce; padding: 8px 0;')
+        self.advice.setObjectName('coachAdvice')
         side.addWidget(self.advice)
+        self.explanation_debug = QTextEdit()
+        self.explanation_debug.setReadOnly(True)
+        self.explanation_debug.setMinimumHeight(110)
+        self.explanation_debug.setMaximumHeight(160)
+        self.explanation_debug.setVisible(developer)
+        side.addWidget(self.explanation_debug)
         controls = QHBoxLayout()
         self.previous = QPushButton('←')
         self.next = QPushButton('→')
@@ -182,6 +214,7 @@ class AnalysisDialog(QDialog):
         outer = QVBoxLayout(wrapper)
         outer.setContentsMargins(0,0,0,0)
         scroll = QScrollArea()
+        self.coach_scroll = scroll
         scroll.setWidgetResizable(True)
         scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         scroll.setWidget(panel)
@@ -201,6 +234,7 @@ class AnalysisDialog(QDialog):
         self.line_cursor = 0
         self.alternatives = []
         self.root_position = self.game.board.root()
+        self.showing_before = False
         self.update_line_controls()
         if self.moves:
             significant = next((i for i,m in enumerate(self.moves) if m.get('coaching')),0)
@@ -238,10 +272,7 @@ class AnalysisDialog(QDialog):
         reason = {'material_loss':'Потеря материала','pawn_loss':'Потеря пешки','missed_capture':'Пропущенное взятие',
                   'missed_material':'Упущена возможность выиграть материал','missed_mate':'Пропущен мат в один',
                   'missed_forced_mate':'Упущен форсированный мат','allowed_mate':'Матовая угроза'}.get(coaching.get('reason'))
-        if reason:
-            self.summary.setText(reason + '\n' + self.summary.text())
-        if coaching.get('response'):
-            self.summary.setText(self.summary.text() + '\nОтвет Stockfish: ' + coaching['response']['pv_san'])
+        self.response_label.setText('Ответ Stockfish: ' + coaching['response']['pv_san'] if coaching.get('response') else '')
         self.alternatives = coaching.get('alternatives',[])
         # Saved lines must correspond to this actual position; old analysis remains readable.
         if coaching.get('root_fen') != self.root_position.fen():
@@ -256,7 +287,32 @@ class AnalysisDialog(QDialog):
         self.variations.blockSignals(False)
         self.advice.setText(coaching.get('advice') or (f"Stockfish предпочитает {move['best_san']}. Для этого сохранённого разбора подробные варианты отсутствуют."
                                                     if move['cpl'] > 40 else 'Этот ход не требует подробного разбора.'))
-        self.return_to_actual()
+        explanation = coaching.get('explanation')
+        if not explanation and self.alternatives:
+            from app.services.analysis_explainer import explain
+            explanation = explain(self.root_position,self.game.board.move_stack[move['ply']-1],coaching,self.game.player_color)
+        self.recommendation.setText(explanation['recommendation'] if explanation else
+                                    'Для этого сохранённого разбора объяснение идеи не записано.')
+        if explanation:
+            self.summary.setText(explanation['title']+'\n'+explanation['reason'])
+        elif reason:
+            self.summary.setText(reason + '\n' + self.summary.text())
+        self.advice.setVisible(not explanation)
+        self.advice_heading.setVisible(not explanation)
+        self.coach_scroll.verticalScrollBar().setValue(0)
+        self.summary.setProperty('severity','error' if move['cpl'] > 40 else 'good')
+        self.summary.style().unpolish(self.summary)
+        self.summary.style().polish(self.summary)
+        self.explanation_debug.setPlainText(json.dumps(explanation or {},ensure_ascii=False,indent=2))
+        self.line_moves = []
+        self.showing_before = bool(self.alternatives)
+        if self.showing_before:
+            self.board.annotations = [(h['from'],h['to'],h['role']) for h in (explanation or {}).get('highlights',[])]
+            self.board.set_position(self.root_position)
+            self.line_status.setText('До вашего хода · красная стрелка — ваш ход, зелёная — рекомендация')
+            self.update_line_controls()
+        else:
+            self.return_to_actual()
 
     def show_variation(self,row):
         if row < 0 or row >= len(self.alternatives):
@@ -270,13 +326,17 @@ class AnalysisDialog(QDialog):
             self.line_moves.append(move)
             position.push(move)
         self.line_cursor = min(1,len(self.line_moves))
+        self.showing_before = False
+        self.board.annotations = []
+        # Choosing another branch is a controlled skip to its common root, then one animated move.
+        self.board.set_position(self.root_position)
         self.render_line()
 
     def render_line(self):
         position = self.root_position.copy()
         for move in self.line_moves[:self.line_cursor]:
             position.push(move)
-        self.board.set_position(position)
+        self.board.set_position(position,animate=True,celebrate=False)
         self.line_status.setText(f'Рекомендуемый вариант · полуход {self.line_cursor} из {len(self.line_moves)}')
         self.update_line_controls()
 
@@ -287,11 +347,13 @@ class AnalysisDialog(QDialog):
 
     def return_to_actual(self):
         self.line_moves = []
+        self.showing_before = False
+        self.board.annotations = []
         position = self.game.board.root()
         ply = self.moves[self.selected_row]['ply'] if self.selected_row is not None else len(self.game.board.move_stack)
         for move in self.game.board.move_stack[:ply]:
             position.push(move)
-        self.board.set_position(position)
+        self.board.set_position(position,animate=True,celebrate=False)
         self.line_status.setText('Фактическая партия')
         self.variations.blockSignals(True)
         self.variations.setCurrentRow(-1)
@@ -301,4 +363,4 @@ class AnalysisDialog(QDialog):
     def update_line_controls(self):
         self.previous.setEnabled(bool(self.line_moves) and self.line_cursor > 0)
         self.next.setEnabled(bool(self.line_moves) and self.line_cursor < len(self.line_moves))
-        self.actual_button.setEnabled(bool(self.line_moves))
+        self.actual_button.setEnabled(bool(self.line_moves) or self.showing_before)
