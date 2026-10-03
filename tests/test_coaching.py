@@ -154,6 +154,8 @@ def test_unstable_evaluations_fall_back_instead_of_confident_material_claim():
     notes = build_coaching(board,chess.Move.from_uci('d1d4'),info(400,'d1d2'),
                           info(-600,'e5d4 g1f1 a8c8'),[info(-700,'d1d2 a8c8 d2d3')],chess.WHITE)
     assert notes['confidence'] == 'fallback' and notes['reason'] is None
+    assert 'не подтверждают преимущество' in notes['explanation']['recommendation']
+    assert 'более высокую оценку' not in notes['explanation']['recommendation']
 
 
 def test_good_move_keeps_base_analysis_budget(monkeypatch):

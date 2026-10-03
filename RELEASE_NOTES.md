@@ -1,5 +1,7 @@
-Adaptive Chess 0.5.0 — a quieter desktop interface, substantial pieces and clearer teaching.
+Adaptive Chess 0.5.1 — a quieter desktop interface, substantial pieces and clearer teaching.
 
+- Neutral teaching fallback: when short engine evaluations disagree, recommendations no longer
+  claim a higher score. Observable board geometry does not assert an unproved contribution to evaluation.
 - Original Staunton-inspired SVG set with wider turned bases and bodies, stronger crowns,
   warm ivory and graphite surfaces, soft gradients, ambient shading and restrained highlights.
   All twelve vectors remain lightweight, filter-free and bundled in the portable package.

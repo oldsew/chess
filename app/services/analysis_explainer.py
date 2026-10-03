@@ -34,8 +34,11 @@ def explain(before, played, notes, color):
             position = before.copy(stack=False)
             piece = position.piece_at(candidate.from_square)
             position.push(candidate)
-            recommendation = (f"{best['san']} сохраняет более высокую оценку в показанном продолжении. "
-                              'Просмотрите линию и сравните ответы соперника; точная идея пока не установлена.')
+            supported = (best.get('evaluation_cp') is not None and notes.get('after_cp') is not None
+                         and best['evaluation_cp'] > notes['after_cp'])
+            recommendation = ((f"{best['san']} сохраняет более высокую оценку в показанном продолжении. " if supported else
+                               f"Stockfish предлагает {best['san']} для сравнения; короткие оценки не подтверждают преимущество этой линии. ") +
+                              'Просмотрите ответы соперника; точная идея пока не установлена.')
             if position.is_checkmate():
                 recommendation, motif = f"{best['san']} сразу ставит мат: у короля нет законного ответа на шах.", 'mate'
                 confidence = 'high'
@@ -69,7 +72,7 @@ def explain(before, played, notes, color):
                 elif piece.piece_type == chess.PAWN and candidate.to_square in (chess.D4, chess.E4, chess.D5, chess.E5):
                     idea, motif = f'Пешка занимает центральную клетку {chess.square_name(candidate.to_square)}.', 'center'
                 if idea:
-                    recommendation = f"{best['san']}: {idea} Это видимая идея хода; преимущество варианта подтверждает оценка Stockfish."
+                    recommendation = f"{best['san']}: {idea} Это наблюдаемый факт; его вклад в оценку по короткой линии не установлен."
                     # Confidence in a board fact must not upgrade an unproven explanation of the error.
                     factors.append({'recommended_move_feature': motif, 'square': chess.square_name(candidate.to_square)})
                 elif position.is_check():
