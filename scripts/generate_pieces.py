@@ -4,10 +4,10 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1] / 'resources/pieces'
 # A shared turned foot and neck vocabulary makes every silhouette part of one quiet set.
 SHAPES = {
-    'pawn': '''<path d="M30 33 C32 37 33 41 32 47 C31 52 28 55 26 58 H46 C44 55 41 52 40 47 C39 41 40 37 42 33 Z"/>
-      <path d="M28 32 Q36 35 44 32 L43 36 Q36 39 29 36 Z"/>
-      <circle cx="36" cy="23" r="9.5" fill="url(#sphere)"/>
-      <path d="M30 19 C31 16 34 15 37 15 M32 40 C34 46 32 51 30 54" fill="none" stroke="url(#rim)"/>
+    'pawn': '''<path d="M30 38 C33 42 33 45 32 49 C31 53 28 56 26 58 H46 C44 56 41 53 40 49 C39 45 39 42 42 38 Z"/>
+      <path d="M28 37 Q36 40 44 37 L43 40 Q36 43 29 40 Z"/>
+      <circle cx="36" cy="28" r="9" fill="url(#sphere)"/>
+      <path d="M31 24 C32 22 34 21 37 21 M32 43 C34 48 32 52 30 54" fill="none" stroke="url(#rim)"/>
       <path d="M28 57 Q36 59 44 57" fill="none" stroke="url(#rim)"/>''',
     'rook': '''<path d="M21 13 Q24 12 28 13 V21 H33 V13 H39 V21 H44 V13 Q48 12 51 13 V28 Q48 31 44 33 L45 50 Q45 54 49 58 H23 Q27 54 27 50 L28 33 Q24 31 21 28 Z"/>
       <path d="M22 27 Q36 30 50 27 L49 31 Q36 35 23 31 Z"/>
@@ -26,7 +26,8 @@ SHAPES = {
       <path d="M29 20 Q25 25 27 29 M28 34 Q34 37 40 35 M31 42 C33 47 30 52 29 54" fill="none" stroke="url(#rim)"/>
       <path d="M30 38 Q36 40 42 38 L42 41 Q36 43 30 41 Z"/>
       <path d="M28 56 Q36 58 44 56" fill="none" stroke="url(#rim)"/>''',
-    'queen': '''<path d="M20 22 L28 29 L31 20 L36 29 L41 20 L44 29 L52 22 L46 39 C42 44 42 51 49 58 H23 C30 51 30 44 26 39 Z"/>
+    'queen': '''<path d="M20 22 L28 29 L31 20 L34 27 L36 13 L38 27 L41 20 L44 29 L52 22 L46 39 C42 44 42 51 49 58 H23 C30 51 30 44 26 39 Z"/>
+      <circle cx="36" cy="10" r="3" fill="url(#sphere)"/>
       <circle cx="20" cy="19" r="3.2" fill="url(#sphere)"/>
       <circle cx="31" cy="17" r="2.6" fill="url(#sphere)"/>
       <circle cx="41" cy="17" r="2.6" fill="url(#sphere)"/>

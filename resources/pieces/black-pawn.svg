@@ -16,10 +16,10 @@
 </defs>
 <ellipse cx="37" cy="76" rx="25" ry="4.5" fill="url(#shadow)"/>
 <g fill="url(#body)" stroke="#14202e" stroke-width="1.05" stroke-linejoin="round" stroke-linecap="round">
-<path d="M30 33 C32 37 33 41 32 47 C31 52 28 55 26 58 H46 C44 55 41 52 40 47 C39 41 40 37 42 33 Z"/>
-      <path d="M28 32 Q36 35 44 32 L43 36 Q36 39 29 36 Z"/>
-      <circle cx="36" cy="23" r="9.5" fill="url(#sphere)"/>
-      <path d="M30 19 C31 16 34 15 37 15 M32 40 C34 46 32 51 30 54" fill="none" stroke="url(#rim)"/>
+<path d="M30 38 C33 42 33 45 32 49 C31 53 28 56 26 58 H46 C44 56 41 53 40 49 C39 45 39 42 42 38 Z"/>
+      <path d="M28 37 Q36 40 44 37 L43 40 Q36 43 29 40 Z"/>
+      <circle cx="36" cy="28" r="9" fill="url(#sphere)"/>
+      <path d="M31 24 C32 22 34 21 37 21 M32 43 C34 48 32 52 30 54" fill="none" stroke="url(#rim)"/>
       <path d="M28 57 Q36 59 44 57" fill="none" stroke="url(#rim)"/>
 <path d="M25 58 Q36 56 47 58 L49 61 Q36 65 23 61 Z"/>
   <path d="M25 63 Q36 65 47 63 C48 66 51 68 53 71 Q36 77 19 71 C21 68 24 66 25 63 Z"/>

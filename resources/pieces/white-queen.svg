@@ -16,7 +16,8 @@
 </defs>
 <ellipse cx="37" cy="76" rx="25" ry="4.5" fill="url(#shadow)"/>
 <g fill="url(#body)" stroke="#807361" stroke-width="1.05" stroke-linejoin="round" stroke-linecap="round">
-<path d="M20 22 L28 29 L31 20 L36 29 L41 20 L44 29 L52 22 L46 39 C42 44 42 51 49 58 H23 C30 51 30 44 26 39 Z"/>
+<path d="M20 22 L28 29 L31 20 L34 27 L36 13 L38 27 L41 20 L44 29 L52 22 L46 39 C42 44 42 51 49 58 H23 C30 51 30 44 26 39 Z"/>
+      <circle cx="36" cy="10" r="3" fill="url(#sphere)"/>
       <circle cx="20" cy="19" r="3.2" fill="url(#sphere)"/>
       <circle cx="31" cy="17" r="2.6" fill="url(#sphere)"/>
       <circle cx="41" cy="17" r="2.6" fill="url(#sphere)"/>

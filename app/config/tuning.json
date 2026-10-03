@@ -159,7 +159,8 @@
     "pv_plies": 6,
     "min_cpl": 40,
     "extra_depth": 2,
-    "time_limit": 0.25
+    "time_limit": 0.25,
+    "material_confidence_ratio": 0.65
   },
   "selection": {
     "bands_cp": [
@@ -167,8 +168,14 @@
       150,
       250
     ],
-    "close_narrowing_rating": 1600,
-    "unique_best_gap_cp": 100
+    "unique_best_gap_cp": 100,
+    "close_narrowing_range": [
+      1400,
+      1800
+    ],
+    "close_narrow_ceiling_cp": 90,
+    "close_candidate_cp": 50,
+    "close_candidate_count": 3
   },
   "difficulty": {
     "base_offsets": [

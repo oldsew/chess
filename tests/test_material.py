@@ -82,3 +82,11 @@ def test_material_strips_follow_display_not_live_game(qtbot,tmp_path,monkeypatch
     assert window.bottom_material.snapshot.white_lost == (chess.KNIGHT,chess.PAWN)
     assert len(game.board.move_stack) == 8
     window.close()
+
+
+def test_capture_of_promoted_queen_is_not_a_lost_pawn():
+    board = chess.Board('5r1k/P7/8/8/8/8/8/7K w - - 0 1')
+    board.push_uci('a7a8q')
+    assert MaterialSnapshot.from_board(board).white_lost == ()
+    board.push_uci('f8a8')
+    assert MaterialSnapshot.from_board(board).white_lost == (chess.QUEEN,)

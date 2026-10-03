@@ -29,7 +29,7 @@ def test_short_pv_is_legal_and_never_more_than_six_plies():
     board = chess.Board()
     value = Variation.from_info(board,info(84,'e2e4 e7e5 g1f3 b8c6 f1b5 a7a6 b5a4 g8f6'),chess.WHITE)
     assert len(value.pv_uci) == 6
-    assert value.pv_san == '1. e4  1… e5  2. Nf3  2… Nc6  3. Bb5  3… a6'
+    assert value.pv_san == '1. e4 e5  2. Nf3 Nc6  3. Bb5 a6'
     assert value.san == 'e4' and value.depth == 16
     assert format_evaluation(value.evaluation_cp) == '+0.84'
     for uci in value.pv_uci:
@@ -147,3 +147,36 @@ def test_analysis_ui_variation_is_read_only_and_returns_to_actual(qtbot):
     dialog.return_to_actual()
     assert dialog.board.board.fen() == game.board.fen()
     assert dialog.game.pgn() == actual
+
+
+def test_unstable_evaluations_fall_back_instead_of_confident_material_claim():
+    board = chess.Board(LOSS_FEN)
+    notes = build_coaching(board,chess.Move.from_uci('d1d4'),info(400,'d1d2'),
+                          info(-600,'e5d4 g1f1 a8c8'),[info(-700,'d1d2 a8c8 d2d3')],chess.WHITE)
+    assert notes['confidence'] == 'fallback' and notes['reason'] is None
+
+
+def test_good_move_keeps_base_analysis_budget(monkeypatch):
+    engine = EngineService()
+    calls = []
+    monkeypatch.setattr(engine,'_configure',lambda options:None)
+    def analyse(board,limit,**kwargs):
+        calls.append(kwargs)
+        return {'score':chess.engine.PovScore(chess.engine.Cp(10),chess.WHITE),
+                'pv':[next(iter(board.legal_moves))], 'depth':16}
+    monkeypatch.setattr(engine,'_analyse',analyse)
+    board = chess.Board()
+    board.push_uci('e2e4')
+    moves,metrics = engine.analyse_game(board,chess.WHITE,16)
+    assert len(calls) == 2 and all('multipv' not in kwargs for kwargs in calls)
+    assert moves[0].coaching is None and moves[0].cpl == 0
+    engine.close()
+
+
+def test_possible_sacrifice_compensation_uses_neutral_advice():
+    board = chess.Board(LOSS_FEN)
+    # Material drops by a queen, but the engine's smaller loss suggests compensation.
+    notes = build_coaching(board,chess.Move.from_uci('d1d4'),info(400,'d1d2'),
+                          info(100,'e5d4 g1f1 a8c8'),[info(400,'d1d2 a8c8 d2d3')],chess.WHITE)
+    assert notes['confidence'] == 'fallback' and notes['reason'] is None
+    assert 'выигрывает ферзя' not in notes['advice']

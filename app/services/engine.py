@@ -98,7 +98,7 @@ class EngineService:
                     best = board.san(before["pv"][0])
                     before_cp = score_cp(before["score"], player_color)
                     before_label = str(before["score"].pov(player_color))
-                    root = board.copy(stack=False)
+                    root = board.copy()
                     board.push(move)
                     after = self._analyse(board, limit)
                     after_cp = score_cp(after["score"], player_color)

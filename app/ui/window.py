@@ -42,6 +42,8 @@ QPushButton:disabled { color: #657388; background: #202a38; }
 QPushButton#primary { background: #287d74; border-color: #41a99b; }
 QComboBox, QSpinBox { padding: 7px; background: #293647; border: 1px solid #39495f; }
 QListWidget, QTextEdit, QTableWidget { background: #1e2836; border: 1px solid #334154; padding: 5px; }
+QListWidget::item:selected { background: #345459; color: #f1f5f7; }
+QTableView { selection-background-color: #345459; selection-color: #f1f5f7; }
 QHeaderView::section { background: #293647; padding: 6px; border: 1px solid #39495f; }
 QSplitter::handle { background: #171e29; }
 QFrame#clockPanel { background: #202c3a; border: 1px solid #35455a; border-radius: 7px; }

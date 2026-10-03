@@ -74,8 +74,11 @@ def select_move(board:chess.Board,candidates:list[Candidate],rating:float,rng:ra
     spread = best-min(c.score for c in legal)
     complexity = 'complex' if board.is_check() or spread > 150 else 'simple' if len(legal) <= 2 or phase == 'opening' else 'normal'
     ceiling = profile.max_allowed_cpl
-    if rating >= TUNING['selection']['close_narrowing_rating'] and sum(best-c.score <= 50 for c in legal) >= 3:
-        ceiling = min(ceiling,90)
+    cfg = TUNING['selection']
+    if sum(best-c.score <= cfg['close_candidate_cp'] for c in legal) >= cfg['close_candidate_count']:
+        low,high = cfg['close_narrowing_range']
+        fraction = max(0,min(1,(rating-low)/(high-low)))
+        ceiling += fraction * (min(ceiling,cfg['close_narrow_ceiling_cp'])-ceiling)
     winning_mate = any(c.mate is not None and c.mate > 0 for c in legal)
     safe_mate = any(c.mate is None or c.mate > 0 for c in legal)
     allowed,reasons = [],[]

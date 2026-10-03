@@ -24,13 +24,17 @@ class Variation:
 
     @classmethod
     def from_info(cls, board, info, color):
-        position = board.copy(stack=False)
+        position = board.copy()
         moves, labels = [], []
         for move in info.get('pv', [])[:TUNING['coaching']['pv_plies']]:
             if move not in position.legal_moves:
                 break
             prefix = f'{position.fullmove_number}.' if position.turn else f'{position.fullmove_number}…'
-            labels.append(f'{prefix} {position.san(move)}')
+            san = position.san(move)
+            if position.turn or not labels:
+                labels.append(f'{prefix} {san}')
+            else:
+                labels[-1] += f' {san}'
             moves.append(move.uci())
             position.push(move)
         if not moves:
@@ -102,13 +106,16 @@ def build_coaching(before, move, before_info, after_info, alternatives_info, col
                 actual_delta,better_delta = actual[0]-base,better[0]-base
                 evidence = [{'played_line_material_change':actual_delta,'best_line_material_change':better_delta}]
                 # Equal exchanges and sacrifices with compensation visible in this line don't claim a loss.
-                if actual_delta <= -1 and better_delta > actual_delta and actual[1]:
+                score_gap = best.evaluation_cp-after_score.score()
+                material_gap = max(abs(actual_delta),abs(better_delta-actual_delta))
+                supported = score_gap >= material_gap*100*TUNING['coaching']['material_confidence_ratio']
+                if supported and actual_delta <= -1 and better_delta > actual_delta and actual[1]:
                     piece = max(actual[1],key=lambda p:VALUES[p])
                     if -actual_delta >= VALUES[piece] > 0:
                         reason = 'pawn_loss' if piece == chess.PAWN else 'material_loss'
                         advice = f'В показанном ответе Stockfish соперник выигрывает {PIECES[piece]}; материальный баланс меняется на {actual_delta:+d}. Сравните с ходом {best.san}.'
                         confidence = 'legal_pv_material'
-                elif better_delta >= 1 and better_delta > actual_delta:
+                elif supported and better_delta >= 1 and better_delta > actual_delta:
                     best_move = chess.Move.from_uci(best.uci)
                     if before.is_capture(best_move) and not before.is_capture(move):
                         reason = 'missed_capture'

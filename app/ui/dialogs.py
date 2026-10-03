@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import json
 import chess
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QRect, QSize
 from PySide6.QtGui import QColor, QPainter, QPen
 from PySide6.QtWidgets import (QCheckBox, QComboBox, QDialog, QDialogButtonBox, QFormLayout,
-    QLabel, QSpinBox, QSplitter, QListWidget, QHBoxLayout, QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget, QPushButton)
+    QLabel, QSpinBox, QSplitter, QListWidget, QHBoxLayout, QHeaderView, QScrollArea, QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget, QPushButton)
 
 from app.config.settings import DEFAULT_SETTINGS
 from app.ui.board import THEMES, ChessBoard
@@ -96,6 +96,24 @@ class StatisticsDialog(QDialog):
         layout.addWidget(QLabel("Уровень — внутренняя оценка приложения, не официальный рейтинг FIDE."))
 
 
+class VariationList(QListWidget):
+    def __init__(self):
+        super().__init__()
+        self.setWordWrap(True)
+        self.setTextElideMode(Qt.ElideNone)
+        self.setMinimumHeight(185)
+
+    def resizeEvent(self,event):
+        super().resizeEvent(event)
+        self.fit_rows()
+
+    def fit_rows(self):
+        for row in range(self.count()):
+            item = self.item(row)
+            bounds = self.fontMetrics().boundingRect(QRect(0,0,max(80,self.viewport().width()-20),1000),Qt.TextWordWrap,item.text())
+            item.setSizeHint(QSize(0,bounds.height()+12))
+
+
 class AnalysisDialog(QDialog):
     def __init__(self, row, parent=None):
         super().__init__(parent)
@@ -110,7 +128,8 @@ class AnalysisDialog(QDialog):
         self.table.setHorizontalHeaderLabels(["Ход", "Ваш ход", "До", "После", "Категория", "Лучший", "Потеря"])
         self.table.setEditTriggers(QTableWidget.NoEditTriggers)
         self.table.setSelectionBehavior(QTableWidget.SelectRows)
-        self.table.setMaximumHeight(175)
+        self.table.setMaximumHeight(145)
+        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
         self.table.horizontalHeader().setStretchLastSection(True)
         for i, m in enumerate(self.moves):
             mate = self.has_mate(m)
@@ -126,8 +145,6 @@ class AnalysisDialog(QDialog):
         self.board.set_position(self.game.board)
         split.addWidget(self.board)
         panel = QWidget()
-        panel.setMinimumWidth(340)
-        panel.setMaximumWidth(480)
         side = QVBoxLayout(panel)
         self.played_label = QLabel('Выберите ход в списке')
         self.played_label.setWordWrap(True)
@@ -137,10 +154,10 @@ class AnalysisDialog(QDialog):
         side.addWidget(QLabel('Что произошло'))
         self.summary = QLabel('Доска показывает фактическую партию.')
         self.summary.setWordWrap(True)
+        self.summary.setTextFormat(Qt.PlainText)
         side.addWidget(self.summary)
         side.addWidget(QLabel('Лучшие варианты · нажмите, чтобы посмотреть'))
-        self.variations = QListWidget()
-        self.variations.setWordWrap(True)
+        self.variations = VariationList()
         side.addWidget(self.variations,1)
         side.addWidget(QLabel('Совет'))
         self.advice = QLabel('')
@@ -155,14 +172,24 @@ class AnalysisDialog(QDialog):
         self.next.clicked.connect(lambda:self.step_variation(1))
         controls.addWidget(self.previous)
         controls.addWidget(self.next)
-        side.addLayout(controls)
         self.line_status = QLabel('Фактическая партия')
         self.line_status.setWordWrap(True)
-        side.addWidget(self.line_status)
         self.actual_button = QPushButton('К фактической партии')
         self.actual_button.clicked.connect(self.return_to_actual)
-        side.addWidget(self.actual_button)
-        split.addWidget(panel)
+        wrapper = QWidget()
+        wrapper.setMinimumWidth(365)
+        wrapper.setMaximumWidth(490)
+        outer = QVBoxLayout(wrapper)
+        outer.setContentsMargins(0,0,0,0)
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        scroll.setWidget(panel)
+        outer.addWidget(scroll,1)
+        outer.addLayout(controls)
+        outer.addWidget(self.line_status)
+        outer.addWidget(self.actual_button)
+        split.addWidget(wrapper)
         split.setStretchFactor(0,1)
         layout.addWidget(split,1)
         self.table.cellClicked.connect(self.show_position)
@@ -208,6 +235,13 @@ class AnalysisDialog(QDialog):
         self.summary.setText(f"Оценка с вашей стороны: {self.score(move,'before')} → {self.score(move,'after')}\n" +
                              ('Матовая тактика: обычная числовая потеря не применяется.' if self.has_mate(move) else f"Потеря оценки: {move['cpl']/100:.2f}"))
         coaching = move.get('coaching') or {}
+        reason = {'material_loss':'Потеря материала','pawn_loss':'Потеря пешки','missed_capture':'Пропущенное взятие',
+                  'missed_material':'Упущена возможность выиграть материал','missed_mate':'Пропущен мат в один',
+                  'missed_forced_mate':'Упущен форсированный мат','allowed_mate':'Матовая угроза'}.get(coaching.get('reason'))
+        if reason:
+            self.summary.setText(reason + '\n' + self.summary.text())
+        if coaching.get('response'):
+            self.summary.setText(self.summary.text() + '\nОтвет Stockfish: ' + coaching['response']['pv_san'])
         self.alternatives = coaching.get('alternatives',[])
         # Saved lines must correspond to this actual position; old analysis remains readable.
         if coaching.get('root_fen') != self.root_position.fen():
@@ -218,6 +252,7 @@ class AnalysisDialog(QDialog):
         for i, alternative in enumerate(self.alternatives,1):
             score = format_evaluation(alternative['evaluation_cp'],alternative['mate'],alternative.get('mate_winning'))
             self.variations.addItem(f"{i}. {alternative['san']}    {score}\n{alternative['pv_san']}")
+        self.variations.fit_rows()
         self.variations.blockSignals(False)
         self.advice.setText(coaching.get('advice') or (f"Stockfish предпочитает {move['best_san']}. Для этого сохранённого разбора подробные варианты отсутствуют."
                                                     if move['cpl'] > 40 else 'Этот ход не требует подробного разбора.'))

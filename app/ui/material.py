@@ -41,6 +41,10 @@ class MaterialStrip(QWidget):
         # Promotions can produce extra captured pieces: scale spacing to fit instead of clipping.
         widths = [12 if p == chess.PAWN else 20 for p in lost]
         scale = min(1., max(0., max_x - x - 22) / max(1, sum(widths)))
+        if lost:
+            painter.setPen(Qt.NoPen)
+            painter.setBrush(QColor('#607187'))
+            painter.drawRoundedRect(QRectF(x+3,3,22+sum(widths[:-1])*scale,24),4,4)
         for i, piece in enumerate(lost):
             self.renderers[('white' if self.color else 'black', piece)].render(painter, QRectF(x, 1, 24, 28))
             x += widths[i] * scale
