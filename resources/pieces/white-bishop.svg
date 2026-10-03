@@ -1,25 +1,31 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 82">
 <defs>
-      <linearGradient id="body" x1="17" y1="20" x2="56" y2="28" gradientUnits="userSpaceOnUse">
-        <stop offset="0" stop-color="#fffef8"/><stop offset=".3" stop-color="#f5ecd9"/>
-        <stop offset=".78" stop-color="#c7bba5"/><stop offset="1" stop-color="#ebe0cb"/>
-      </linearGradient>
-      <radialGradient id="sphere" cx=".32" cy=".25" r=".8">
-        <stop stop-color="#fffefb"/><stop offset=".55" stop-color="#eee2ce"/><stop offset="1" stop-color="#bdaf95"/>
-      </radialGradient>
-      <linearGradient id="rim" x1="0" y1="0" x2="1" y2="1">
-        <stop stop-color="#fffcf2" stop-opacity=".8"/><stop offset="1" stop-color="#fffcf2" stop-opacity=".12"/>
-      </linearGradient>
-      <linearGradient id="ink"><stop stop-color="#756c5b"/><stop offset="1" stop-color="#756c5b"/></linearGradient>
-      <radialGradient id="shadow"><stop stop-color="#0c1420" stop-opacity=".3"/><stop offset="1" stop-color="#0c1420" stop-opacity="0"/></radialGradient>
-    </defs>
-<ellipse cx="37" cy="76" rx="27" ry="5.5" fill="url(#shadow)"/>
-<g fill="url(#body)" stroke="#756c5b" stroke-width="1.15" stroke-linejoin="round" stroke-linecap="round">
-<path d="M36 9 Q21 20 23 29 Q24 35 32 37 Q32 46 28 51 L23 59 H49 L44 51 Q40 46 40 37 Q48 35 49 29 Q51 20 36 9 Z"/>
-      <circle cx="36" cy="8" r="3.2" fill="url(#sphere)"/>
-      <path d="M32 18 L40 28" fill="none" stroke="url(#ink)" stroke-width="2.3"/>
-      <path d="M28 31 Q31 34 35 34 M31 41 Q36 43 41 41 M28 55 Q36 57 44 55" fill="none" stroke="url(#rim)"/><path d="M24 58 Q36 56 48 58 L51 62 Q36 66 21 62 Z"/>
-  <path d="M23 63 Q36 65 49 63 L53 68 Q36 73 19 68 Z"/>
-  <path d="M21 68 Q36 71 51 68 L55 73 Q36 78 17 73 Z"/>
-  <path d="M24 60 Q35 62 48 60 M23 66 Q36 69 49 66 M21 72 Q36 75 51 72" fill="none" stroke="url(#rim)" stroke-width="1"/>
-</g></svg>
+  <linearGradient id="body" x1="19" y1="18" x2="57" y2="65" gradientUnits="userSpaceOnUse">
+    <stop stop-color="#fffaf0"/><stop offset=".34" stop-color="#f1e7d4"/>
+    <stop offset=".78" stop-color="#c9bda7"/><stop offset="1" stop-color="#e2d6c0"/>
+  </linearGradient>
+  <radialGradient id="sphere" cx=".32" cy=".24" r=".83">
+    <stop stop-color="#fffdf6"/><stop offset=".56" stop-color="#eee1cb"/><stop offset="1" stop-color="#beb097"/>
+  </radialGradient>
+  <linearGradient id="rim" x1="0" y1="0" x2=".8" y2="1">
+    <stop stop-color="#fffef8" stop-opacity=".7"/><stop offset="1" stop-color="#fffef8" stop-opacity=".16"/>
+  </linearGradient>
+  <linearGradient id="shade"><stop stop-color="#807361" stop-opacity=".5"/><stop offset="1" stop-color="#807361" stop-opacity=".15"/></linearGradient>
+  <linearGradient id="ink"><stop stop-color="#807361"/><stop offset="1" stop-color="#807361"/></linearGradient>
+  <radialGradient id="shadow"><stop stop-color="#0c1420" stop-opacity=".24"/><stop offset="1" stop-color="#0c1420" stop-opacity="0"/></radialGradient>
+</defs>
+<ellipse cx="37" cy="76" rx="25" ry="4.5" fill="url(#shadow)"/>
+<g fill="url(#body)" stroke="#807361" stroke-width="1.05" stroke-linejoin="round" stroke-linecap="round">
+<path d="M36 10 C32 14 23 20 23 28 C23 33 27 36 32 38 C32 45 30 51 25 58 H47 C42 51 40 45 40 38 C45 36 49 33 49 28 C49 20 40 14 36 10 Z"/>
+      <circle cx="36" cy="9" r="3" fill="url(#sphere)"/>
+      <path d="M33 17 L40 28" fill="none" stroke="url(#ink)" stroke-width="2.5"/>
+      <path d="M29 20 Q25 25 27 29 M28 34 Q34 37 40 35 M31 42 C33 47 30 52 29 54" fill="none" stroke="url(#rim)"/>
+      <path d="M30 38 Q36 40 42 38 L42 41 Q36 43 30 41 Z"/>
+      <path d="M28 56 Q36 58 44 56" fill="none" stroke="url(#rim)"/>
+<path d="M25 58 Q36 56 47 58 L49 61 Q36 65 23 61 Z"/>
+  <path d="M25 63 Q36 65 47 63 C48 66 51 68 53 71 Q36 77 19 71 C21 68 24 66 25 63 Z"/>
+  <path d="M23 69 Q36 73 49 69 L53 72 Q36 78 19 72 Z"/>
+  <path d="M26 60 Q36 62 46 60 M26 65 Q35 68 46 65 M23 72 Q36 75 49 72" fill="none" stroke="url(#rim)" stroke-width=".9"/>
+  <path d="M26 63 Q36 66 46 63" fill="none" stroke="url(#shade)" stroke-width=".8"/>
+</g>
+</svg>

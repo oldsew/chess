@@ -43,6 +43,7 @@ class MoveAnalysis:
     category: str
     before_label: str = ""
     after_label: str = ""
+    coaching: dict | None = None
 
 
 @dataclass

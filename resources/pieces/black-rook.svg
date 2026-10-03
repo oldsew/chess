@@ -1,23 +1,29 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 82">
 <defs>
-      <linearGradient id="body" x1="17" y1="20" x2="56" y2="28" gradientUnits="userSpaceOnUse">
-        <stop offset="0" stop-color="#626e7c"/><stop offset=".3" stop-color="#303c4c"/>
-        <stop offset=".78" stop-color="#151d29"/><stop offset="1" stop-color="#424d5b"/>
-      </linearGradient>
-      <radialGradient id="sphere" cx=".32" cy=".25" r=".8">
-        <stop stop-color="#788492"/><stop offset=".55" stop-color="#354252"/><stop offset="1" stop-color="#141d29"/>
-      </radialGradient>
-      <linearGradient id="rim" x1="0" y1="0" x2="1" y2="1">
-        <stop stop-color="#a9b5c5" stop-opacity=".8"/><stop offset="1" stop-color="#a9b5c5" stop-opacity=".12"/>
-      </linearGradient>
-      <linearGradient id="ink"><stop stop-color="#121a24"/><stop offset="1" stop-color="#121a24"/></linearGradient>
-      <radialGradient id="shadow"><stop stop-color="#0c1420" stop-opacity=".3"/><stop offset="1" stop-color="#0c1420" stop-opacity="0"/></radialGradient>
-    </defs>
-<ellipse cx="37" cy="76" rx="27" ry="5.5" fill="url(#shadow)"/>
-<g fill="url(#body)" stroke="#121a24" stroke-width="1.15" stroke-linejoin="round" stroke-linecap="round">
-<path d="M21 12 H28 V19 H33 V12 H39 V19 H44 V12 H51 V28 Q48 31 45 33 L46 53 L51 59 H21 L26 53 L27 33 Q24 31 21 28 Z"/>
-      <path d="M23 28 Q36 32 49 28 M28 35 V50 M28 54 Q36 56 44 54" fill="none" stroke="url(#rim)"/><path d="M24 58 Q36 56 48 58 L51 62 Q36 66 21 62 Z"/>
-  <path d="M23 63 Q36 65 49 63 L53 68 Q36 73 19 68 Z"/>
-  <path d="M21 68 Q36 71 51 68 L55 73 Q36 78 17 73 Z"/>
-  <path d="M24 60 Q35 62 48 60 M23 66 Q36 69 49 66 M21 72 Q36 75 51 72" fill="none" stroke="url(#rim)" stroke-width="1"/>
-</g></svg>
+  <linearGradient id="body" x1="19" y1="18" x2="57" y2="65" gradientUnits="userSpaceOnUse">
+    <stop stop-color="#687482"/><stop offset=".34" stop-color="#394656"/>
+    <stop offset=".78" stop-color="#182230"/><stop offset="1" stop-color="#3a4858"/>
+  </linearGradient>
+  <radialGradient id="sphere" cx=".32" cy=".24" r=".83">
+    <stop stop-color="#82909f"/><stop offset=".56" stop-color="#435264"/><stop offset="1" stop-color="#192534"/>
+  </radialGradient>
+  <linearGradient id="rim" x1="0" y1="0" x2=".8" y2="1">
+    <stop stop-color="#bdc8d4" stop-opacity=".7"/><stop offset="1" stop-color="#bdc8d4" stop-opacity=".16"/>
+  </linearGradient>
+  <linearGradient id="shade"><stop stop-color="#14202e" stop-opacity=".5"/><stop offset="1" stop-color="#14202e" stop-opacity=".15"/></linearGradient>
+  <linearGradient id="ink"><stop stop-color="#14202e"/><stop offset="1" stop-color="#14202e"/></linearGradient>
+  <radialGradient id="shadow"><stop stop-color="#0c1420" stop-opacity=".24"/><stop offset="1" stop-color="#0c1420" stop-opacity="0"/></radialGradient>
+</defs>
+<ellipse cx="37" cy="76" rx="25" ry="4.5" fill="url(#shadow)"/>
+<g fill="url(#body)" stroke="#14202e" stroke-width="1.05" stroke-linejoin="round" stroke-linecap="round">
+<path d="M21 13 Q24 12 28 13 V21 H33 V13 H39 V21 H44 V13 Q48 12 51 13 V28 Q48 31 44 33 L45 50 Q45 54 49 58 H23 Q27 54 27 50 L28 33 Q24 31 21 28 Z"/>
+      <path d="M22 27 Q36 30 50 27 L49 31 Q36 35 23 31 Z"/>
+      <path d="M24 15 V24 M30 36 L29 49 Q29 53 27 55 M28 55 Q36 57 44 55" fill="none" stroke="url(#rim)"/>
+      <path d="M43 35 L44 50" fill="none" stroke="url(#shade)" stroke-width="1.7"/>
+<path d="M25 58 Q36 56 47 58 L49 61 Q36 65 23 61 Z"/>
+  <path d="M25 63 Q36 65 47 63 C48 66 51 68 53 71 Q36 77 19 71 C21 68 24 66 25 63 Z"/>
+  <path d="M23 69 Q36 73 49 69 L53 72 Q36 78 19 72 Z"/>
+  <path d="M26 60 Q36 62 46 60 M26 65 Q35 68 46 65 M23 72 Q36 75 49 72" fill="none" stroke="url(#rim)" stroke-width=".9"/>
+  <path d="M26 63 Q36 66 46 63" fill="none" stroke="url(#shade)" stroke-width=".8"/>
+</g>
+</svg>

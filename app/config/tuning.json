@@ -9,14 +9,98 @@
   "multipv": 8,
   "analysis_depth": 16,
   "analysis_time": 0.35,
-  "thresholds": [15, 40, 90, 200],
-  "rating": {"calibration_games": 5, "settling_games": 15, "caps": [80, 50, 25], "result_weight": 0.35, "quality_weight": 0.65, "quality_base": 72, "quality_scale": 45, "recent_weight": 0.35, "offset_step": 5},
-  "profiles": [
-    {"elo": 400, "skill_level": 20, "inaccuracy_probability": 0.38, "mistake_probability": 0.20, "blunder_probability": 0.04, "max_allowed_cpl": 220, "candidate_move_temperature": 75, "search_time": 0.18},
-    {"elo": 1000, "skill_level": 20, "inaccuracy_probability": 0.27, "mistake_probability": 0.12, "blunder_probability": 0.02, "max_allowed_cpl": 160, "candidate_move_temperature": 45, "search_time": 0.25},
-    {"elo": 1600, "skill_level": 20, "inaccuracy_probability": 0.16, "mistake_probability": 0.05, "blunder_probability": 0.005, "max_allowed_cpl": 110, "candidate_move_temperature": 24, "search_time": 0.4},
-    {"elo": 2200, "skill_level": 20, "inaccuracy_probability": 0.06, "mistake_probability": 0.01, "blunder_probability": 0.0, "max_allowed_cpl": 65, "candidate_move_temperature": 12, "search_time": 0.7},
-    {"elo": 2800, "skill_level": 20, "inaccuracy_probability": 0.02, "mistake_probability": 0.0, "blunder_probability": 0.0, "max_allowed_cpl": 40, "candidate_move_temperature": 5, "search_time": 1.0}
+  "thresholds": [
+    15,
+    40,
+    90,
+    200
   ],
-  "think_times": {"simple": [0.4, 1.2], "normal": [0.8, 2.5], "complex": [1.5, 4.0]}
+  "rating": {
+    "calibration_games": 5,
+    "settling_games": 15,
+    "caps": [
+      80,
+      50,
+      25
+    ],
+    "result_weight": 0.35,
+    "quality_weight": 0.65,
+    "quality_base": 72,
+    "quality_scale": 45,
+    "recent_weight": 0.35,
+    "offset_step": 5
+  },
+  "profiles": [
+    {
+      "elo": 400,
+      "skill_level": 20,
+      "inaccuracy_probability": 0.38,
+      "mistake_probability": 0.2,
+      "blunder_probability": 0.04,
+      "max_allowed_cpl": 220,
+      "candidate_move_temperature": 75,
+      "search_time": 0.18
+    },
+    {
+      "elo": 1000,
+      "skill_level": 20,
+      "inaccuracy_probability": 0.27,
+      "mistake_probability": 0.12,
+      "blunder_probability": 0.02,
+      "max_allowed_cpl": 160,
+      "candidate_move_temperature": 45,
+      "search_time": 0.25
+    },
+    {
+      "elo": 1600,
+      "skill_level": 20,
+      "inaccuracy_probability": 0.16,
+      "mistake_probability": 0.05,
+      "blunder_probability": 0.005,
+      "max_allowed_cpl": 110,
+      "candidate_move_temperature": 24,
+      "search_time": 0.4
+    },
+    {
+      "elo": 2200,
+      "skill_level": 20,
+      "inaccuracy_probability": 0.06,
+      "mistake_probability": 0.01,
+      "blunder_probability": 0.0,
+      "max_allowed_cpl": 65,
+      "candidate_move_temperature": 12,
+      "search_time": 0.7
+    },
+    {
+      "elo": 2800,
+      "skill_level": 20,
+      "inaccuracy_probability": 0.02,
+      "mistake_probability": 0.0,
+      "blunder_probability": 0.0,
+      "max_allowed_cpl": 40,
+      "candidate_move_temperature": 5,
+      "search_time": 1.0
+    }
+  ],
+  "think_times": {
+    "simple": [
+      0.4,
+      1.2
+    ],
+    "normal": [
+      0.8,
+      2.5
+    ],
+    "complex": [
+      1.5,
+      4.0
+    ]
+  },
+  "coaching": {
+    "multipv": 3,
+    "pv_plies": 6,
+    "min_cpl": 40,
+    "extra_depth": 2,
+    "time_limit": 0.25
+  }
 }

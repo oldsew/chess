@@ -26,6 +26,8 @@ from app.config.gameplay import GAMEPLAY
 from app.ui.navigation import PositionNavigator
 from app.ui.clocks import ClockPanel
 from app.ui.motion import system_motion_enabled
+from app.services.material import MaterialSnapshot
+from app.ui.material import MaterialStrip
 
 log = logging.getLogger(__name__)
 STYLE = """
@@ -120,7 +122,16 @@ class MainWindow(QMainWindow):
         self.board.previous_requested.connect(self.previous_position)
         self.board.next_requested.connect(self.next_position)
         self.board.presentation_finished.connect(self.presentation_finished)
-        splitter.addWidget(self.board)
+        board_area = QWidget()
+        board_layout = QVBoxLayout(board_area)
+        board_layout.setContentsMargins(0, 0, 0, 0)
+        board_layout.setSpacing(0)
+        self.top_material = MaterialStrip(self.board.renderers)
+        self.bottom_material = MaterialStrip(self.board.renderers)
+        board_layout.addWidget(self.top_material)
+        board_layout.addWidget(self.board, 1)
+        board_layout.addWidget(self.bottom_material)
+        splitter.addWidget(board_area)
         side = QWidget()
         side.setMinimumWidth(250)
         side.setMaximumWidth(340)
@@ -279,6 +290,9 @@ class MainWindow(QMainWindow):
                                               (' · Шах' if self.game.board.is_check() else ''))
                 else:
                     self.status_label.setText(self.result_title(self.game))
+        material = MaterialSnapshot.from_board(self.board.board)
+        self.top_material.set_material(material, not self.board.orientation, self.board.player_color)
+        self.bottom_material.set_material(material, self.board.orientation, self.board.player_color, True)
         self.update_clocks()
         self.update_debug()
 

@@ -14,6 +14,7 @@ from app.adaptive.selector import BehaviorProfile, Candidate, Selection, select_
 from app.config.settings import TUNING, engine_path
 from app.config.gameplay import GAMEPLAY
 from app.services.live import LiveEvaluation
+from app.services.coaching import build_coaching
 
 log = logging.getLogger(__name__)
 
@@ -95,12 +96,24 @@ class EngineService:
                     best = board.san(before["pv"][0])
                     before_cp = score_cp(before["score"], player_color)
                     before_label = str(before["score"].pov(player_color))
+                    root = board.copy(stack=False)
                     board.push(move)
                     after = self._analyse(board, limit)
                     after_cp = score_cp(after["score"], player_color)
                     loss = centipawn_loss(before_cp, after_cp)
+                    coaching = None
+                    # Keep the base analysis/rating metrics unchanged; extend only teachable errors.
+                    best_position = root.copy(stack=False)
+                    best_position.push(before["pv"][0])
+                    if loss > TUNING['coaching']['min_cpl'] or (best_position.is_checkmate() and not board.is_checkmate()):
+                        if self.cancelled.is_set():
+                            raise InterruptedError("Анализ отменён")
+                        cfg = TUNING['coaching']
+                        alternatives = self._analyse(root, chess.engine.Limit(depth=min(22, depth + cfg['extra_depth']), time=cfg['time_limit']),
+                                                     multipv=min(cfg['multipv'],root.legal_moves.count()))
+                        coaching = build_coaching(root,move,before,after,alternatives,player_color)
                     results.append(MoveAnalysis(ply, san, best, before_cp, after_cp, loss, classify(loss),
-                                                before_label, str(after["score"].pov(player_color))))
+                                                before_label, str(after["score"].pov(player_color)),coaching))
                 else:
                     board.push(move)
                 if progress:
