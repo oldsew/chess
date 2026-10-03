@@ -119,6 +119,7 @@ def attach_visual_smoke(app,window,report_path):
                          'analysis':json.dumps([{'ply':1,'san':played_san,'best_san':notes['alternatives'][0]['san'],
                                                 'category':'Грубая ошибка','cpl':1000,'before_cp':400,'after_cp':-600,'coaching':notes}])}
                     dialog=AnalysisDialog(row,window)
+                    dialog.board.animations_enabled=True  # Exercise full motion independently of runner preferences.
                     dialog.resize(width-40,height-40);dialog.show();QApplication.processEvents()
                     assert dialog.width()<=width and dialog.height()<=height,'Analysis window does not fit'
                     assert dialog.showing_before and len(dialog.board.annotations)==2

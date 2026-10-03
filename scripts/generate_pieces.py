@@ -41,7 +41,7 @@ BASE = '''<path d="M22 58 Q36 56 50 58 L53 62 Q36 67 19 62 Z"/>
   <path d="M22 64 Q36 67 50 64 Q52 67 58 71 Q36 79 14 71 Q20 67 22 64 Z"/>
   <path d="M18 70 Q36 77 54 70 L58 73 Q36 81 14 73 Z"/>
   <path d="M23 60 Q36 63 49 60 M24 66 Q36 71 49 66 M19 73 Q36 78 53 73" fill="none" stroke="url(#rim)" stroke-width="1"/>
-  <path d="M23 64 Q36 68 49 64" fill="none" stroke="url(#shade)" stroke-width="1"/>''' 
+  <path d="M23 64 Q36 68 49 64" fill="none" stroke="url(#shade)" stroke-width="1"/>'''
 
 
 def generate():

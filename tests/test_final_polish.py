@@ -70,6 +70,7 @@ def test_unrelated_branches_are_controlled_snapshots(qtbot):
 
 def test_rapid_history_navigation_retains_game_pgn_clocks_and_latest(qtbot,tmp_path,monkeypatch):
     w=MainWindow(tmp_path);qtbot.addWidget(w)
+    w.board.animations_enabled=True  # Test motion even on runners with Windows reduced motion.
     monkeypatch.setattr(w,'advance',lambda:None)
     w.session.start(chess.WHITE)
     for uci in ['e2e4','d7d5','e4d5','d8d5','b1c3','d5e5']:
@@ -154,6 +155,7 @@ def test_recommendation_animation_before_position_and_return(qtbot):
          'analysis':json.dumps([{'ply':1,'san':'Qd4','best_san':'Qd2','category':'Грубая ошибка','cpl':1000,
                                 'before_cp':400,'after_cp':-600,'coaching':notes}])}
     dialog=AnalysisDialog(row);qtbot.addWidget(dialog);dialog.show()
+    dialog.board.animations_enabled=True
     assert dialog.showing_before and dialog.board.board.fen()==game.board.root().fen()
     assert len(dialog.board.annotations)==2 and dialog.actual_button.isEnabled()
     actual=dialog.game.pgn()
@@ -196,3 +198,14 @@ def test_mate_explanation_is_separate_and_recommends_verified_finish():
     value=notes['explanation']
     assert value['confidence']=='high' and value['detected_motif']=='mate'
     assert 'сразу ставит мат' in value['recommendation'] and 'нет законного ответа' in value['recommendation']
+
+
+def test_analysis_respects_system_reduced_motion(qtbot,monkeypatch):
+    monkeypatch.setattr('app.ui.dialogs.system_motion_enabled',lambda:False)
+    game=GameState()
+    dialog=AnalysisDialog({'analysis':'[]','pgn':game.pgn(),'player_color':True,'result':'*','accuracy':0.})
+    qtbot.addWidget(dialog)
+    assert not dialog.board.animations_enabled
+    after=chess.Board();after.push_uci('e2e4')
+    dialog.board.set_position(after,animate=True,celebrate=False)
+    assert not dialog.board.animating and dialog.board.board.fen()==after.fen()

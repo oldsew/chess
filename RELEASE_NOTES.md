@@ -1,31 +1,41 @@
-Adaptive Chess 0.4.0 — material visibility, offline teaching and gentler adaptive opponents.
+Adaptive Chess 0.5.0 — a quieter desktop interface, substantial pieces and clearer teaching.
 
-- Compact SVG strips show each side's actual captured pieces and the player's material balance.
-  Historical review and save/resume reconstruct them from moves, including en passant and promotion.
-- Refined original ivory/graphite set: coherent turned bases, smoother silhouettes, clearer details,
-  quiet gradients and highlights. No filters, real 3D or additional dependency.
-- Significant mistakes receive three local Stockfish MultiPV alternatives and short legal lines,
-  the opponent's continuation, and an evidence-based teaching note. Recommendations can be reviewed
-  on the analysis board and returned to the actual game without changing PGN or live state.
-  Uncertain causes use neutral text; mate transitions are separate from ordinary numerical loss.
-- Low-strength profiles use wider MultiPV and explicit probability masses for natural inaccuracies
-  and errors. Profiles interpolate continuously. Obvious queen gifts, free queen captures and mates
-  retain safeguards. The player rating, target strength and behavioral parameters stay distinct.
-- Lower ratings receive gentler offsets. Two hopeless losses first ease the opponent and cap further
-  rating decline. Existing profiles and rating history are retained without resets or schema changes.
-- Developer Mode shows candidate CPL/probability/rank, actual search settings, bot CPL distribution,
-  average/median, error counts and unique-best-move frequency. Diagnostics are local JSON; no telemetry.
-- Clocks, controls, paused recovery, navigation, live feedback, custom sounds, 250 ms movement,
-  650 ms mate presentation, good-move analysis and atomic rating persistence retained.
+- Original Staunton-inspired SVG set with wider turned bases and bodies, stronger crowns,
+  warm ivory and graphite surfaces, soft gradients, ambient shading and restrained highlights.
+  All twelve vectors remain lightweight, filter-free and bundled in the portable package.
+- Unified neutral graphite/warm-grey UI, gently raised buttons with hover/pressed/disabled
+  states, consistent panels and clocks. Live position text gains seven semantic color levels;
+  the existing user perspective and hysteresis determine both words and colors.
+- Adjacent history positions animate forward and backward over 250 ms, including captured
+  pieces returning, en passant, both castling pieces and promotion. Rapid input safely replaces
+  the current transition. Multi-ply jumps and returning to the latest position remain immediate.
+  Reviewing a historical mate never repeats the result pulse. PGN and actual clocks never rewind.
+- Offline analysis separates what happened from why the recommended move is better. Material
+  and mate explanations reuse existing legal PV evidence. Development, center, open-file and
+  check ideas state observable board facts; unknown causes remain neutral. No extra engine/API
+  calls, no mandatory LLM, and no additional dependency.
+- Selecting a significant mistake shows the position before it with two restrained arrows.
+  Short recommendation lines animate in both directions; returning to the actual played
+  position never edits PGN. Old saved analyses remain readable, with ideas reconstructed where
+  prior PV evidence is available. Developer Mode includes explanation type, confidence,
+  detected motif, material delta, chosen recommendation, PV and factors.
+- Small-window layout keeps clocks and history controls visible. Setup/move rows and teaching
+  content scroll as needed. Extra captions hide at low height. All three DPI smoke processes
+  check a 1366x768 physical workspace at 100%, 125% and 150%, with screenshots as evidence.
+- Adaptive rating/behavior profiles, selection, final engine calculations, clock/session logic,
+  SQLite data and custom WAV sounds are retained unchanged. No schema migration or data reset.
 
-Download AdaptiveChess-Windows-x64.zip, extract the entire archive, and open
-AdaptiveChess/AdaptiveChess.exe. Keep _internal beside the exe; no Python/Qt/Stockfish install is needed.
-AdaptiveChess_Source.zip includes application and corresponding Stockfish sources.
-SHA256SUMS.txt contains both archive checksums.
+Validation: 201 regression tests, plus ten actual-executable smoke stages, including the seven
+existing gameplay/restore/engine/audio/learning stages and three DPI/visual stages. Each new
+stage observes intermediate frames for fourteen forward/backward transitions, verifies rapid
+navigation, semantic colors, before-move highlights, both-color explanations and read-only PV
+review. The release contains Windows portable, corresponding source and SHA256SUMS.txt.
 
-The Windows pipeline runs all 172 tests and seven smoke stages against the real executable,
-including capture/history/restart, material and clock restoration, both-color offline coaching,
-read-only PV navigation, and deterministic strength comparisons, alongside existing gameplay,
-clock, mate, SVG and audio regression checks. Audio decoding/mute and available playback backends
-are checked; physical Windows listening and human Elo calibration are separate checks.
+Extract the entire AdaptiveChess-Windows-x64.zip and open AdaptiveChess/AdaptiveChess.exe.
+Keep _internal beside the executable. No Python/Qt/Stockfish install is needed.
+
+Known limits: teaching intentionally favors verified short-line facts over speculative strategy.
+Long descriptions and move rows use scrolling at high DPI. Automated offscreen rendering checks
+layout, resources and behavior, not subjective beauty or physical monitor appearance. Audio
+resources, decoding and mute are verified; physical Windows listening is a separate manual check.
 The displayed level remains an internal Adaptive Chess Rating, not certified FIDE/online Elo.
