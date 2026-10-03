@@ -10,7 +10,7 @@ from PySide6.QtWidgets import (QCheckBox, QComboBox, QDialog, QDialogButtonBox, 
 from app.config.settings import DEFAULT_SETTINGS
 from app.ui.board import THEMES, ChessBoard
 from app.services.clocks import TIME_CONTROLS
-from app.ui.style import STYLE
+from app.ui.style import STYLE, fit_window
 from app.ui.motion import system_motion_enabled
 
 
@@ -240,6 +240,7 @@ class AnalysisDialog(QDialog):
             significant = next((i for i,m in enumerate(self.moves) if m.get('coaching')),0)
             self.table.selectRow(significant)
             self.show_position(significant,0)
+        fit_window(self,1040,700)
 
     @staticmethod
     def has_mate(move):

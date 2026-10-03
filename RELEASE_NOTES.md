@@ -25,7 +25,7 @@ Adaptive Chess 0.5.0 — a quieter desktop interface, substantial pieces and cle
 - Adaptive rating/behavior profiles, selection, final engine calculations, clock/session logic,
   SQLite data and custom WAV sounds are retained unchanged. No schema migration or data reset.
 
-Validation: 201 regression tests, plus ten actual-executable smoke stages, including the seven
+Validation: 204 regression tests, plus ten actual-executable smoke stages, including the seven
 existing gameplay/restore/engine/audio/learning stages and three DPI/visual stages. Each new
 stage observes intermediate frames for fourteen forward/backward transitions, verifies rapid
 navigation, semantic colors, before-move highlights, both-color explanations and read-only PV

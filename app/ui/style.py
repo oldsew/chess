@@ -63,3 +63,13 @@ def show_advantage(label, indicator, active=True):
     ink = ADVANTAGE_COLORS[level] if active else ADVANTAGE_COLORS[0]
     label.setStyleSheet(f'color: {ink};')
     label.setProperty('advantageLevel', level if active else 0)
+
+
+def fit_window(widget, width, height):
+    """Initial size uses logical monitor space so high-DPI laptops don't open oversized windows."""
+    screen = widget.screen()
+    if screen:
+        available = screen.availableGeometry()
+        width = min(width, max(widget.minimumWidth(), available.width()-16))
+        height = min(height, max(widget.minimumHeight(), available.height()-16))
+    widget.resize(width, height)

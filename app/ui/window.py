@@ -30,7 +30,7 @@ from app.services.material import MaterialSnapshot
 from app.ui.material import MaterialStrip
 from app.services.calibration import GameCalibration
 from app.adaptive.selector import BehaviorProfile
-from app.ui.style import STYLE, show_advantage, soften_primary_button
+from app.ui.style import STYLE, show_advantage, soften_primary_button, fit_window
 
 log = logging.getLogger(__name__)
 
@@ -66,6 +66,7 @@ class MainWindow(QMainWindow):
         self.setMinimumSize(620, 490)
         self.apply_settings()
         self.refresh()
+        fit_window(self,1080,750)
         self.clock_timer = QTimer(self)
         self.clock_timer.setInterval(GAMEPLAY['clock_refresh_ms'])
         self.clock_timer.timeout.connect(self.tick_clocks)

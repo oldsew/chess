@@ -11,7 +11,7 @@ from app.services.game import GameState
 from app.services.live import PositionIndicator
 from app.ui.board import ChessBoard
 from app.ui.dialogs import AnalysisDialog
-from app.ui.style import ADVANTAGE_COLORS, show_advantage
+from app.ui.style import ADVANTAGE_COLORS, show_advantage, fit_window
 from app.ui.transitions import MoveTransition
 from app.ui.window import MainWindow
 from test_coaching import info, loss_notes, LOSS_FEN
@@ -71,6 +71,7 @@ def test_unrelated_branches_are_controlled_snapshots(qtbot):
 def test_rapid_history_navigation_retains_game_pgn_clocks_and_latest(qtbot,tmp_path,monkeypatch):
     w=MainWindow(tmp_path);qtbot.addWidget(w)
     w.board.animations_enabled=True  # Test motion even on runners with Windows reduced motion.
+    w.show()
     monkeypatch.setattr(w,'advance',lambda:None)
     w.session.start(chess.WHITE)
     for uci in ['e2e4','d7d5','e4d5','d8d5','b1c3','d5e5']:
@@ -209,3 +210,16 @@ def test_analysis_respects_system_reduced_motion(qtbot,monkeypatch):
     after=chess.Board();after.push_uci('e2e4')
     dialog.board.set_position(after,animate=True,celebrate=False)
     assert not dialog.board.animating and dialog.board.board.fen()==after.fen()
+
+
+@pytest.mark.parametrize('width,height',[(1366,768),(1092,614),(910,512)])
+def test_initial_window_size_fits_logical_monitor_space(qtbot,tmp_path,monkeypatch,width,height):
+    from types import SimpleNamespace
+    from PySide6.QtCore import QRect
+    w=MainWindow(tmp_path);qtbot.addWidget(w)
+    monkeypatch.setattr(w,'screen',lambda:SimpleNamespace(availableGeometry=lambda:QRect(0,0,width,height)))
+    fit_window(w,1080,750);w.show()
+    qtbot.wait(30)
+    assert w.width()<width and w.height()<height
+    assert min(w.board.width(),w.board.height())>=300
+    w.close()
