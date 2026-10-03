@@ -160,7 +160,10 @@
     "min_cpl": 40,
     "extra_depth": 2,
     "time_limit": 0.25,
-    "material_confidence_ratio": 0.65
+    "material_confidence_ratio": 0.65,
+    "analysis_pv_plies": 10,
+    "min_explanation_plies": 6,
+    "explanation_depth_cap": 16
   },
   "selection": {
     "bands_cp": [
@@ -209,5 +212,17 @@
     "hopeless_accuracy": 65,
     "hopeless_cpl": 90,
     "hopeless_rating_drop_cap": 8
+  },
+  "explainer": {
+    "material_score_ratio": 0.65,
+    "mobility_gain": 4,
+    "piece_mobility_gain": 3,
+    "center_gain": 2,
+    "king_danger_gain": 2,
+    "opening_max_move": 15,
+    "winning_cp": 200,
+    "equal_cp": 30,
+    "worse_cp": 90,
+    "minimum_feature_gap_cp": 15
   }
 }

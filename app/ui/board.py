@@ -50,6 +50,7 @@ class ChessBoard(QWidget):
         self.transition: MoveTransition | None = None
         self.progress = 1.0
         self.annotations = []
+        self.tactical_highlights = set()
         self.animation = QVariantAnimation(self)
         self.animation.setDuration(MOVE_DURATION_MS)
         self.animation.setStartValue(0.0)
@@ -186,6 +187,11 @@ class ChessBoard(QWidget):
         for square in chess.SQUARES:
             rect = self.square_rect(square)
             painter.fillRect(rect, QColor(light if (chess.square_rank(square) + chess.square_file(square)) % 2 else dark))
+            if square in self.tactical_highlights:
+                painter.fillRect(rect,QColor(190,120,58,38))
+                painter.setPen(QPen(QColor(168,98,48,150),1.6))
+                painter.setBrush(Qt.NoBrush)
+                painter.drawRoundedRect(rect.adjusted(4,4,-4,-4),5,5)
             if last_move and square in (last_move.from_square, last_move.to_square):
                 painter.fillRect(rect, QColor(245, 211, 135, 48))
                 painter.setPen(QPen(QColor(252, 228, 175, 100), 1.2))

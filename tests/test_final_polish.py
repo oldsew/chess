@@ -115,8 +115,9 @@ def test_low_confidence_explains_observed_development_without_inventing_error():
     notes=build_coaching(b,chess.Move.from_uci('a2a3'),info(100,'g1f3'),
                          info(0,'e7e5 g1f3 b8c6'),[info(100,'g1f3 e7e5 e2e4')],True)
     value=notes['explanation']
-    assert value['confidence']=='low' and value['detected_motif']=='development'
-    assert 'исходной горизонтали' in value['recommendation']
+    assert value['confidence']=='medium' and value['reason_type'] in ('development','center_control')
+    assert value['factors']['development_delta']==1
+    assert any(f['type']=='development' for f in value['alternatives'][0]['distinguishing_features'])
     assert 'короля' not in value['reason'] and 'структур' not in value['reason']
 
 
@@ -126,7 +127,8 @@ def test_factual_center_idea_is_color_independent(color):
     played=chess.Move.from_uci('a2a3' if color else 'a7a6')
     best=chess.Move.from_uci('e2e4' if color else 'e7e5')
     value=explain(b,played,{'confidence':'fallback','alternatives':[{'uci':best.uci(),'san':b.san(best),'pv_uci':[best.uci()],'mate':None}]},color)
-    assert value['confidence']=='low' and value['detected_motif']=='center'
+    assert value['confidence']=='low' and value['reason_type']=='unresolved'
+    assert value['factors']['center_control_delta']>0
     assert chess.square_name(best.to_square) in value['recommendation']
 
 
@@ -134,7 +136,8 @@ def test_open_file_is_factual_and_invalid_recommendation_is_not_used():
     b=chess.Board('6k1/5ppp/8/8/8/8/PP3PPP/3R2K1 w - - 0 1')
     notes={'confidence':'fallback','alternatives':[{'uci':'d1e1','san':'Re1','pv_uci':['d1e1'],'mate':None}]}
     value=explain(b,chess.Move.from_uci('d1d2'),notes,True)
-    assert value['detected_motif']=='open_file' and 'нет пешек' in value['recommendation']
+    assert value['reason_type']=='unresolved' and value['confidence']=='low'
+    assert any(f['type']=='open_file' for f in value['alternatives'][0]['distinguishing_features'])
     notes['alternatives'][0]['uci']='d1e2'
     value=explain(b,chess.Move.from_uci('d1d2'),notes,True)
     assert value['chosen_recommendation'] is None and len(value['highlights'])==1
@@ -188,7 +191,7 @@ def test_explanation_of_missed_capture_uses_material_evidence():
                          info(0,'g8h8 e2e3 h8g8'),[info(800,'d1d4 g8h8 d4e3')],True)
     value=notes['explanation']
     assert value['confidence']=='high' and value['reason_type']=='missed_capture'
-    assert 'выиграть материал' in value['recommendation'] and '+9' in value['recommendation']
+    assert value['alternatives'][0]['feature_deltas']['best_material_delta']==9
 
 
 def test_mate_explanation_is_separate_and_recommends_verified_finish():
@@ -197,8 +200,8 @@ def test_mate_explanation_is_separate_and_recommends_verified_finish():
     notes=build_coaching(b,chess.Move.from_uci('g6h6'),info(0,'g6g7',mate=1),
                          info(500,'h8g8'),[info(0,'g6g7',mate=1)],True)
     value=notes['explanation']
-    assert value['confidence']=='high' and value['detected_motif']=='mate'
-    assert 'сразу ставит мат' in value['recommendation'] and 'нет законного ответа' in value['recommendation']
+    assert value['confidence']=='high' and value['reason_type']=='missed_mate'
+    assert value['alternatives'][0]['distinguishing_features']==[{'type':'mate'}]
 
 
 def test_analysis_respects_system_reduced_motion(qtbot,monkeypatch):

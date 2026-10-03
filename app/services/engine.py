@@ -110,10 +110,8 @@ class EngineService:
                     if loss > TUNING['coaching']['min_cpl'] or (best_position.is_checkmate() and not board.is_checkmate()):
                         if self.cancelled.is_set():
                             raise InterruptedError("Анализ отменён")
-                        cfg = TUNING['coaching']
-                        alternatives = self._analyse(root, chess.engine.Limit(depth=min(22, depth + cfg['extra_depth']), time=cfg['time_limit']),
-                                                     multipv=min(cfg['multipv'],root.legal_moves.count()))
-                        coaching = build_coaching(root,move,before,after,alternatives,player_color)
+                        explanatory_after,alternatives,comparison = self._compare_teaching_moves(root,move,depth)
+                        coaching = build_coaching(root,move,before,explanatory_after,alternatives,player_color,comparison)
                     results.append(MoveAnalysis(ply, san, best, before_cp, after_cp, loss, classify(loss),
                                                 before_label, str(after["score"].pov(player_color)),coaching))
                 else:
@@ -121,6 +119,55 @@ class EngineService:
                 if progress:
                     progress(ply, len(final_board.move_stack))
             return results, Performance.from_moves(results)
+
+    def _compare_teaching_moves(self, root, played, depth):
+        """Candidate discovery, then every resulting position at exactly the same fixed depth.
+
+        The time-limited base calculations above still drive CPL/rating. Teaching uses this
+        separate matched comparison; UI never sees partial engine iterations.
+        """
+        cfg = TUNING['coaching']
+        shared_depth = min(cfg['explanation_depth_cap'],max(12,depth))
+        discovered = self._analyse(root,chess.engine.Limit(depth=shared_depth,time=cfg['time_limit']),
+                                   multipv=min(cfg['multipv'],root.legal_moves.count()))
+        candidates = list(dict.fromkeys(info['pv'][0] for info in discovered if info.get('pv')))
+        evaluated = {}
+        for move in list(dict.fromkeys([played,*candidates])):
+            if self.cancelled.is_set():raise InterruptedError('Объясняющий анализ отменён')
+            position=root.copy();position.push(move)
+            info=self._analyse(position,chess.engine.Limit(depth=shared_depth))
+            # Some UCI PVs are truncated by a transposition. Extend only short, legal,
+            # nonterminal lines with the same engine; retain the original root score/depth.
+            continuation=position.copy(stack=False)
+            pv=[]
+            for response in info.get('pv',[])[:cfg['analysis_pv_plies']-1]:
+                if response not in continuation.legal_moves:break
+                pv.append(response);continuation.push(response)
+            extensions=[]
+            while len(pv)+1<cfg['min_explanation_plies'] and not continuation.is_game_over():
+                if self.cancelled.is_set():raise InterruptedError('Объясняющий анализ отменён')
+                tail=self._analyse(continuation,chess.engine.Limit(depth=shared_depth,time=cfg['time_limit']))
+                old_length=len(pv)
+                for response in tail.get('pv',[])[:cfg['analysis_pv_plies']-1-len(pv)]:
+                    if response not in continuation.legal_moves:break
+                    pv.append(response);continuation.push(response)
+                extensions.append({'depth':tail.get('depth',0),'added_plies':len(pv)-old_length})
+                if len(pv)==old_length:break
+            info={**info,'pv':pv,'pv_extensions':extensions}
+            evaluated[move]=(info,position.is_game_over())
+        alternatives=[]
+        for move in candidates:
+            info,_=evaluated[move]
+            alternatives.append({**info,'pv':[move,*info.get('pv',[])]})
+        # Refined comparable scores can reorder candidates from the budgeted discovery.
+        alternatives.sort(key=lambda value:score_cp(value['score'],root.turn),reverse=True)
+        actual,_=evaluated[played]
+        depths=[{'move':move.uci(),'depth':info.get('depth',0),'terminal':terminal,
+                 'pv_plies':len(info.get('pv',[]))+1,'pv_extensions':info.get('pv_extensions',[])}
+                for move,(info,terminal) in evaluated.items()]
+        return actual,alternatives,{'requested_depth':shared_depth,'samples':depths,
+                                    'equal_depth':all(sample['terminal'] or sample['depth']==shared_depth for sample in depths),
+                                    'analysis_pv_plies':cfg['analysis_pv_plies'],'ui_pv_plies':cfg['pv_plies']}
 
     def _stop(self):
         if self._engine:

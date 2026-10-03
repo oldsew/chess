@@ -1,7 +1,7 @@
 """Offline, evidence-based teaching notes. Claims refer to legal engine lines, never speculation."""
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 
 import chess
 
@@ -21,21 +21,31 @@ class Variation:
     pv_uci: list[str]
     pv_san: str
     depth: int
+    analysis_pv_uci: list[str] = field(default_factory=list)
+    analysis_pv_san: str = ''
+    analysis_pv_valid: bool = True
 
     @classmethod
     def from_info(cls, board, info, color):
         position = board.copy()
         moves, labels = [], []
-        for move in info.get('pv', [])[:TUNING['coaching']['pv_plies']]:
+        full_moves, full_labels = [], []
+        valid = True
+        for move in info.get('pv', [])[:TUNING['coaching']['analysis_pv_plies']]:
             if move not in position.legal_moves:
+                valid = False
                 break
             prefix = f'{position.fullmove_number}.' if position.turn else f'{position.fullmove_number}…'
             san = position.san(move)
-            if position.turn or not labels:
-                labels.append(f'{prefix} {san}')
+            if position.turn or not full_labels:
+                full_labels.append(f'{prefix} {san}')
             else:
-                labels[-1] += f' {san}'
-            moves.append(move.uci())
+                full_labels[-1] += f' {san}'
+            full_moves.append(move.uci())
+            if len(full_moves) <= TUNING['coaching']['pv_plies']:
+                if position.turn or not labels:labels.append(f'{prefix} {san}')
+                else:labels[-1] += f' {san}'
+                moves.append(move.uci())
             position.push(move)
         if not moves:
             return None
@@ -44,7 +54,7 @@ class Variation:
         mate = score.mate()
         return cls(board.san(first), moves[0], score.score(), mate,
                    score.score(mate_score=100000) > 0 if mate is not None else None,
-                   moves, '  '.join(labels), info.get('depth', 0))
+                   moves, '  '.join(labels), info.get('depth', 0),full_moves,'  '.join(full_labels),valid)
 
 
 def format_evaluation(cp, mate=None, mate_winning=None):
@@ -67,7 +77,7 @@ def _line_facts(board, moves, color):
     return material_balance(position,color),lost,position
 
 
-def build_coaching(before, move, before_info, after_info, alternatives_info, color):
+def build_coaching(before, move, before_info, after_info, alternatives_info, color, comparison=None):
     after = before.copy(stack=False)
     after.push(move)
     alternatives = []
@@ -128,13 +138,14 @@ def build_coaching(before, move, before_info, after_info, alternatives_info, col
     if confidence == 'fallback':
         # No evidence means no king-safety/pawn-structure stories or guessed tactical labels.
         reason = None
-    notes = {'version':2,'root_fen':before.fen(),'played_fen':after.fen(),
+    notes = {'version':3,'root_fen':before.fen(),'played_fen':after.fen(),
             'alternatives':[asdict(v) for v in alternatives],
             'response':asdict(response) if response else None,'reason':reason,'confidence':confidence,
             'advice':advice,'evidence':evidence,'mate_before':before_mate,'mate_after':after_mate,
             'before_cp':before_score.score(),'after_cp':after_score.score(),
             'before_mate_winning':before_winning if before_mate is not None else None,
-            'after_mate_winning':after_winning if after_mate is not None else None}
+            'after_mate_winning':after_winning if after_mate is not None else None,
+            'comparison':comparison or {'equal_depth':False,'legacy_or_fixture':True}}
     from app.services.analysis_explainer import explain
     notes['explanation'] = explain(before, move, notes, color)
     return notes

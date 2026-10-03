@@ -164,25 +164,26 @@ class AnalysisDialog(QDialog):
         self.played_label.setObjectName('playedMove')
         heading('Ваш ход')
         side.addWidget(self.played_label)
-        heading('Что произошло')
+        heading('Почему ход плохой')
         self.summary = QLabel('Доска показывает фактическую партию.')
         self.summary.setObjectName('coachSummary')
         self.summary.setWordWrap(True)
         self.summary.setTextFormat(Qt.PlainText)
         side.addWidget(self.summary)
+        heading('Что мог сделать соперник')
+        self.response_label = QLabel('')
+        self.response_label.setWordWrap(True)
+        self.response_label.setTextFormat(Qt.PlainText)
+        side.addWidget(self.response_label)
         self.variations = VariationList()
-        heading('Почему это лучше')
+        heading('Лучший вариант · какую проблему решает')
         self.recommendation = QLabel('')
         self.recommendation.setObjectName('recommendation')
         self.recommendation.setWordWrap(True)
         self.recommendation.setTextFormat(Qt.PlainText)
         side.addWidget(self.recommendation)
-        heading('Лучше было · нажмите вариант для просмотра')
+        heading('Варианты и их отличия · нажмите для просмотра')
         side.addWidget(self.variations,1)
-        self.response_label = QLabel('')
-        self.response_label.setWordWrap(True)
-        self.response_label.setTextFormat(Qt.PlainText)
-        side.addWidget(self.response_label)
         self.advice_heading = QLabel('Совет')
         self.advice_heading.setObjectName('sectionTitle')
         side.addWidget(self.advice_heading)
@@ -278,24 +279,28 @@ class AnalysisDialog(QDialog):
         # Saved lines must correspond to this actual position; old analysis remains readable.
         if coaching.get('root_fen') != self.root_position.fen():
             self.alternatives = []
+        explanation = coaching.get('explanation')
+        if self.alternatives and (not explanation or explanation.get('version',0)<2):
+            from app.services.analysis_explainer import explain
+            explanation = explain(self.root_position,self.game.board.move_stack[move['ply']-1],coaching,self.game.player_color)
+        self.current_explanation = explanation or {}
         self.variations.blockSignals(True)
         self.variations.clear()
         from app.services.coaching import format_evaluation
         for i, alternative in enumerate(self.alternatives,1):
             score = format_evaluation(alternative['evaluation_cp'],alternative['mate'],alternative.get('mate_winning'))
-            self.variations.addItem(f"{i}. {alternative['san']}    {score}\n{alternative['pv_san']}")
+            detail = next((a for a in self.current_explanation.get('alternatives',[]) if a['uci']==alternative['uci']),{})
+            idea = detail.get('idea','')
+            self.variations.addItem(f"{'Лучший' if i==1 else 'Альтернатива '+str(i-1)} · {alternative['san']}    {score}\n{idea}\n{alternative['pv_san']}")
         self.variations.fit_rows()
         self.variations.blockSignals(False)
         self.advice.setText(coaching.get('advice') or (f"Stockfish предпочитает {move['best_san']}. Для этого сохранённого разбора подробные варианты отсутствуют."
                                                     if move['cpl'] > 40 else 'Этот ход не требует подробного разбора.'))
-        explanation = coaching.get('explanation')
-        if not explanation and self.alternatives:
-            from app.services.analysis_explainer import explain
-            explanation = explain(self.root_position,self.game.board.move_stack[move['ply']-1],coaching,self.game.player_color)
         self.recommendation.setText(explanation['recommendation'] if explanation else
                                     'Для этого сохранённого разбора объяснение идеи не записано.')
         if explanation:
             self.summary.setText(explanation['title']+'\n'+explanation['reason'])
+            self.response_label.setText(explanation.get('opponent_line') or self.response_label.text())
         elif reason:
             self.summary.setText(reason + '\n' + self.summary.text())
         self.advice.setVisible(not explanation)
@@ -309,6 +314,7 @@ class AnalysisDialog(QDialog):
         self.showing_before = bool(self.alternatives)
         if self.showing_before:
             self.board.annotations = [(h['from'],h['to'],h['role']) for h in (explanation or {}).get('highlights',[])]
+            self.board.tactical_highlights = set((explanation or {}).get('key_squares',[]))
             self.board.set_position(self.root_position)
             self.line_status.setText('До вашего хода · красная стрелка — ваш ход, зелёная — рекомендация')
             self.update_line_controls()
@@ -328,7 +334,15 @@ class AnalysisDialog(QDialog):
             position.push(move)
         self.line_cursor = min(1,len(self.line_moves))
         self.showing_before = False
-        self.board.annotations = []
+        selected = self.alternatives[row]
+        detail = next((a for a in self.current_explanation.get('alternatives',[]) if a['uci']==selected['uci']),{})
+        self.recommendation.setText(detail.get('idea',self.current_explanation.get('recommendation','')))
+        played = self.game.board.move_stack[self.moves[self.selected_row]['ply']-1]
+        chosen = chess.Move.from_uci(selected['uci'])
+        self.board.annotations = [(played.from_square,played.to_square,'played'),(chosen.from_square,chosen.to_square,'recommended')]
+        self.board.tactical_highlights = set(detail.get('key_squares',[]))
+        if not self.explanation_debug.isHidden():
+            self.explanation_debug.setPlainText(json.dumps({'error':self.current_explanation,'selected_variant':detail},ensure_ascii=False,indent=2))
         # Choosing another branch is a controlled skip to its common root, then one animated move.
         self.board.set_position(self.root_position)
         self.render_line()
@@ -350,6 +364,7 @@ class AnalysisDialog(QDialog):
         self.line_moves = []
         self.showing_before = False
         self.board.annotations = []
+        self.board.tactical_highlights = set()
         position = self.game.board.root()
         ply = self.moves[self.selected_row]['ply'] if self.selected_row is not None else len(self.game.board.move_stack)
         for move in self.game.board.move_stack[:ply]:
