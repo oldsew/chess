@@ -39,6 +39,7 @@ def prepare_notices(package: Path):
     # PySide6 wheels do not all contain standalone license texts. Fetch authoritative pinned texts.
     import urllib.request
     for name, url in [
+        ('FFmpeg-LGPL-2.1.txt', 'https://raw.githubusercontent.com/FFmpeg/FFmpeg/n7.1/COPYING.LGPLv2.1'),
         ('LGPL-3.0.txt', 'https://raw.githubusercontent.com/qt/qtbase/v6.8.3/LICENSES/LGPL-3.0-only.txt'),
         ('GPL-3.0.txt', 'https://raw.githubusercontent.com/qt/qtbase/v6.8.3/LICENSES/GPL-3.0-only.txt'),
         ('Qt-GPL-exception-1.0.txt', 'https://raw.githubusercontent.com/qt/qtbase/v6.8.3/LICENSES/Qt-GPL-exception-1.0.txt'),

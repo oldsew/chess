@@ -11,7 +11,7 @@ datas = [
 a = Analysis([str(root / 'main.py')], pathex=[str(root)], binaries=[], datas=datas,
              hiddenimports=[], hookspath=[], hooksconfig={}, runtime_hooks=[],
              excludes=['PySide6.QtWebEngineCore', 'PySide6.QtWebEngineWidgets',
-                       'PySide6.QtQml', 'PySide6.QtQuick', 'PySide6.QtMultimedia',
+                       'PySide6.QtQml', 'PySide6.QtQuick',
                        'pytest', 'pytestqt'], noarchive=False)
 pyz = PYZ(a.pure)
 exe = EXE(pyz, a.scripts, [], exclude_binaries=True, name='AdaptiveChess',

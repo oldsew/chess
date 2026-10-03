@@ -51,7 +51,7 @@ def attach_smoke(app, window, report_path: Path, resume: bool, complete: bool = 
                 state["started"] = True
                 state["initial_plies"] = len(window.game.board.move_stack)
                 return
-            if window.busy:
+            if window.busy or window.board.animating:
                 return
             if complete:
                 if not state["completing"]:

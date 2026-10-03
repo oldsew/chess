@@ -1,1 +1,24 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 60"><g fill="#fffaf0" stroke="#283445" color="#283445" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"><path d="M30 5 V18 M24 10 H36" fill="none" stroke-width="3.5"/><path d="M23 19 Q14 16 16 25 L23 35 L19 44 H41 L37 35 L44 25 Q46 16 37 19 Q30 15 23 19 Z"/><path d="M23 35 H37" fill="none"/><path d="M16 45 H44 L46 51 H14 Z"/></g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 82">
+<defs>
+      <linearGradient id="body" x1="17" y1="20" x2="56" y2="28" gradientUnits="userSpaceOnUse">
+        <stop offset="0" stop-color="#fffef8"/><stop offset=".3" stop-color="#f5ecd9"/>
+        <stop offset=".78" stop-color="#c7bba5"/><stop offset="1" stop-color="#ebe0cb"/>
+      </linearGradient>
+      <radialGradient id="sphere" cx=".32" cy=".25" r=".8">
+        <stop stop-color="#fffefb"/><stop offset=".55" stop-color="#eee2ce"/><stop offset="1" stop-color="#bdaf95"/>
+      </radialGradient>
+      <linearGradient id="rim" x1="0" y1="0" x2="1" y2="1">
+        <stop stop-color="#fffcf2" stop-opacity=".8"/><stop offset="1" stop-color="#fffcf2" stop-opacity=".12"/>
+      </linearGradient>
+      <linearGradient id="ink"><stop stop-color="#756c5b"/><stop offset="1" stop-color="#756c5b"/></linearGradient>
+      <radialGradient id="shadow"><stop stop-color="#0c1420" stop-opacity=".3"/><stop offset="1" stop-color="#0c1420" stop-opacity="0"/></radialGradient>
+    </defs>
+<ellipse cx="37" cy="76" rx="27" ry="5.5" fill="url(#shadow)"/>
+<g fill="url(#body)" stroke="#756c5b" stroke-width="1.15" stroke-linejoin="round" stroke-linecap="round">
+<path d="M33 5 H39 V12 H46 V18 H39 V26 H33 V18 H26 V12 H33 Z"/>
+      <path d="M36 27 Q26 20 21 27 Q16 33 27 42 Q30 47 28 52 L22 59 H50 L44 52 Q42 47 45 42 Q56 33 51 27 Q46 20 36 27 Z"/>
+      <path d="M24 29 Q22 34 29 39 M28 42 Q36 45 44 42 M28 55 Q36 57 44 55" fill="none" stroke="url(#rim)"/><path d="M24 58 Q36 56 48 58 L51 62 Q36 66 21 62 Z"/>
+  <path d="M23 63 Q36 65 49 63 L53 68 Q36 73 19 68 Z"/>
+  <path d="M21 68 Q36 71 51 68 L55 73 Q36 78 17 73 Z"/>
+  <path d="M24 60 Q35 62 48 60 M23 66 Q36 69 49 66 M21 72 Q36 75 51 72" fill="none" stroke="url(#rim)" stroke-width="1"/>
+</g></svg>

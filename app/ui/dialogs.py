@@ -17,7 +17,7 @@ class SettingsDialog(QDialog):
         form = QFormLayout(self)
         self.fields = {}
         combos = {"theme": list(THEMES), "player_color": ["Белые", "Чёрные", "Случайно"]}
-        labels = {"theme": "Доска", "sound": "Звук хода", "legal_highlights": "Допустимые ходы",
+        labels = {"theme": "Доска", "sound": "Звуки игры", "legal_highlights": "Допустимые ходы",
                   "player_color": "Мой цвет", "show_bot_rating": "Уровень соперника после партии",
                   "analysis_depth": "Глубина анализа (с лимитом времени)", "developer_mode": "Режим разработчика"}
         for key in DEFAULT_SETTINGS:

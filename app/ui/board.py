@@ -1,22 +1,25 @@
 from __future__ import annotations
 
 import chess
-from PySide6.QtCore import QPointF, QRectF, Qt, Signal
-from PySide6.QtGui import QColor, QFont, QPainter, QPainterPath, QPen
+from PySide6.QtCore import QPointF, QRectF, Qt, Signal, QVariantAnimation, QEasingCurve
+from PySide6.QtGui import QColor, QFont, QPainter, QPen, QRadialGradient
 from PySide6.QtWidgets import QWidget
 from PySide6.QtSvg import QSvgRenderer
 from app.config.settings import resource_root
+from app.ui.transitions import MoveTransition
 
 THEMES = {
     "Сланец": ("#e3e7ed", "#71849a"),
     "Лес": ("#e9ecd9", "#78917b"),
     "Песок": ("#f0e5d0", "#b49b7c"),
 }
-GLYPHS = {chess.KING: "♚", chess.QUEEN: "♛", chess.ROOK: "♜", chess.BISHOP: "♝", chess.KNIGHT: "♞", chess.PAWN: "♟"}
+MOVE_DURATION_MS = 190
 
 
 class ChessBoard(QWidget):
     move_requested = Signal(int, int)
+    animation_started = Signal(object)
+    animation_finished = Signal()
 
     def __init__(self):
         super().__init__()
@@ -33,6 +36,17 @@ class ChessBoard(QWidget):
         self._drag_point = None
         self._dragging = False
         self._origin = None
+        self._drop_start: QPointF | None = None
+        self._motion_start: QPointF | None = None
+        self.transition: MoveTransition | None = None
+        self.progress = 1.0
+        self.animation = QVariantAnimation(self)
+        self.animation.setDuration(MOVE_DURATION_MS)
+        self.animation.setStartValue(0.0)
+        self.animation.setEndValue(1.0)
+        self.animation.setEasingCurve(QEasingCurve.OutCubic)
+        self.animation.valueChanged.connect(self._animation_frame)
+        self.animation.finished.connect(self._animation_done)
         self.renderers = {(color, piece): QSvgRenderer(str(resource_root() / "resources/pieces" / f"{color}-{chess.piece_name(piece)}.svg"))
                           for color in ["white", "black"] for piece in chess.PIECE_TYPES}
 
@@ -53,11 +67,65 @@ class ChessBoard(QWidget):
         row = 7 - chess.square_rank(square) if self.orientation else chess.square_rank(square)
         return QRectF(x + col * cell, y + row * cell, cell, cell)
 
-    def set_position(self, board: chess.Board):
+    @property
+    def animating(self) -> bool:
+        return self.transition is not None
+
+    def set_position(self, board: chess.Board, *, animate: bool = False):
+        if board.fen() == self.board.fen() and board.move_stack == self.board.move_stack:
+            # MainWindow can refresh twice during a move; keep the ongoing transition intact.
+            self.update()
+            return
+        transition = MoveTransition.between(self.board, board) if animate else None
+        self.animation.stop()
+        self.transition = transition
+        self._motion_start = None
+        if transition and self._drop_start is not None:
+            x, y, cell = self.geometry_values()
+            self._motion_start = QPointF((self._drop_start.x() - x) / cell, (self._drop_start.y() - y) / cell)
+        self._drop_start = None
         self.board = board.copy()
         self.selected = None
         self._dragging = False
+        if transition:
+            self.progress = 0.0
+            self.animation_started.emit(transition)
+            self.animation.start()
+        else:
+            self.progress = 1.0
         self.update()
+
+    def _animation_frame(self, progress):
+        self.progress = float(progress)
+        self.update()
+
+    def _animation_done(self):
+        self.transition = None
+        self._motion_start = None
+        self.progress = 1.0
+        self.update()
+        self.animation_finished.emit()
+
+    @property
+    def capture_opacity(self) -> float:
+        t = min(1.0, self.animation.currentTime() / MOVE_DURATION_MS / 0.9)
+        return 1 - t * t * (3 - 2 * t)
+
+    @property
+    def promotion_blend(self) -> float:
+        t = max(0.0, min(1.0, (self.animation.currentTime() / MOVE_DURATION_MS - 0.6) / 0.4))
+        return t * t * (3 - 2 * t)
+
+    def motion_rect(self, index: int) -> QRectF:
+        motion = self.transition.motions[index]
+        origin = self.square_rect(motion.origin).center()
+        if index == 0 and self._motion_start is not None:
+            x, y, cell = self.geometry_values()
+            origin = QPointF(x + self._motion_start.x() * cell, y + self._motion_start.y() * cell)
+        target = self.square_rect(motion.destination).center()
+        center = origin + (target - origin) * self.progress
+        cell = self.geometry_values()[2]
+        return QRectF(center.x() - cell / 2, center.y() - cell / 2, cell, cell)
 
     def _draw_piece(self, painter, piece, rect):
         margin = rect.width() * 0.06
@@ -70,22 +138,55 @@ class ChessBoard(QWidget):
         light, dark = THEMES.get(self.theme, THEMES["Сланец"])
         last_move = self.board.peek() if self.board.move_stack else None
         targets = {m.to_square for m in self.board.legal_moves if m.from_square == self.selected}
+        moving_targets = {m.destination for m in self.transition.motions} if self.transition else set()
         for square in chess.SQUARES:
             rect = self.square_rect(square)
             painter.fillRect(rect, QColor(light if (chess.square_rank(square) + chess.square_file(square)) % 2 else dark))
             if last_move and square in (last_move.from_square, last_move.to_square):
-                painter.fillRect(rect, QColor(227, 191, 81, 110))
+                painter.fillRect(rect, QColor(245, 211, 135, 48))
+                painter.setPen(QPen(QColor(252, 228, 175, 100), 1.2))
+                painter.setBrush(Qt.NoBrush)
+                painter.drawRoundedRect(rect.adjusted(3, 3, -3, -3), 5, 5)
             if square == self.selected:
-                painter.fillRect(rect, QColor(71, 173, 196, 150))
+                painter.fillRect(rect, QColor(89, 185, 177, 48))
+                painter.setPen(QPen(QColor(39, 119, 117, 170), 1.8))
+                painter.setBrush(Qt.NoBrush)
+                painter.drawRoundedRect(rect.adjusted(3, 3, -3, -3), 5, 5)
             if self.board.is_check() and square == self.board.king(self.board.turn):
-                painter.fillRect(rect, QColor(226, 96, 100, 175))
+                glow = QRadialGradient(rect.center(), rect.width() * 0.7)
+                glow.setColorAt(0, QColor(201, 69, 82, 110))
+                glow.setColorAt(1, QColor(201, 69, 82, 0))
+                painter.fillRect(rect, glow)
             if self.highlight_legal and square in targets:
-                painter.setPen(Qt.NoPen)
-                painter.setBrush(QColor(28, 48, 64, 100))
-                painter.drawEllipse(rect.center(), rect.width() * 0.09, rect.height() * 0.09)
+                if self.board.piece_at(square):
+                    painter.setPen(QPen(QColor(32, 73, 74, 95), rect.width() * 0.035))
+                    painter.setBrush(Qt.NoBrush)
+                    painter.drawEllipse(rect.adjusted(5, 5, -5, -5))
+                else:
+                    painter.setPen(Qt.NoPen)
+                    painter.setBrush(QColor(32, 73, 74, 85))
+                    painter.drawEllipse(rect.center(), rect.width() * 0.075, rect.height() * 0.075)
             piece = self.board.piece_at(square)
-            if piece and not (self._dragging and square == self._origin):
+            if piece and square not in moving_targets and not (self._dragging and square == self._origin):
                 self._draw_piece(painter, piece, rect)
+        if self.transition:
+            if self.transition.captured:
+                painter.save()
+                painter.setOpacity(self.capture_opacity)
+                self._draw_piece(painter, self.transition.captured, self.square_rect(self.transition.captured_square))
+                painter.restore()
+            for i, motion in enumerate(self.transition.motions):
+                rect = self.motion_rect(i)
+                if motion.promoted_piece:
+                    blend = self.promotion_blend
+                    painter.save()
+                    painter.setOpacity(1 - blend)
+                    self._draw_piece(painter, motion.piece, rect)
+                    painter.setOpacity(blend)
+                    self._draw_piece(painter, motion.promoted_piece, rect)
+                    painter.restore()
+                else:
+                    self._draw_piece(painter, motion.piece, rect)
         x, y, cell = self.geometry_values()
         painter.setPen(QColor("#9daabd"))
         painter.setFont(QFont("Segoe UI", 9))
@@ -104,7 +205,7 @@ class ChessBoard(QWidget):
         return piece and piece.color == self.player_color and self.board.turn == self.player_color
 
     def mousePressEvent(self, event):
-        if event.button() != Qt.LeftButton or not self.interactive:
+        if event.button() != Qt.LeftButton or not self.interactive or self.animating:
             return
         square = self.square_at(event.position())
         self._press = event.position()
@@ -119,7 +220,7 @@ class ChessBoard(QWidget):
         self.update()
 
     def mouseMoveEvent(self, event):
-        if self.interactive and self._origin is not None and self._press is not None:
+        if self.interactive and not self.animating and self._origin is not None and self._press is not None:
             if (event.position() - self._press).manhattanLength() > 5:
                 self._dragging = True
                 self._drag_point = event.position()
@@ -131,7 +232,9 @@ class ChessBoard(QWidget):
             origin = self._origin
             self.selected = None
             if target is not None:
+                self._drop_start = event.position()
                 self.move_requested.emit(origin, target)
+                self._drop_start = None
         self._dragging = False
         self._origin = None
         self._press = None

@@ -1,6 +1,6 @@
 # Third-party software and licenses
 
-Adaptive Chess and its original SVG artwork are distributed under GPL-3.0 (see LICENSE).
+Adaptive Chess, its original SVG artwork and synthesized PCM sound cues are distributed under GPL-3.0 (see LICENSE).
 
 - python-chess / chess: GPL-3.0 or later; https://github.com/niklasf/python-chess
 - Stockfish 17.1: GPL-3.0; https://github.com/official-stockfish/Stockfish/tree/sf_17.1
@@ -10,6 +10,8 @@ Adaptive Chess and its original SVG artwork are distributed under GPL-3.0 (see L
   portable package and can be replaced by compatible versions. License texts are included in
   THIRD_PARTY_LICENSES. Corresponding source: https://download.qt.io/official_releases/QtForPython/pyside6/PySide6-6.8.3-src/
   Qt source: https://download.qt.io/archive/qt/6.8/6.8.3/single/
+- FFmpeg 7.1 (Qt Multimedia backend): LGPL-2.1 or later; license text is included in
+  THIRD_PARTY_LICENSES. Corresponding source: https://ffmpeg.org/releases/ffmpeg-7.1.tar.xz
 - Python: PSF license; https://www.python.org/downloads/release/python-31214/
 - PyInstaller: GPL-2.0 with bootloader exception permitting bundled application distribution.
 

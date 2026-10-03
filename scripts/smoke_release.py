@@ -16,7 +16,7 @@ def smoke(command: list[str], output: Path):
         variables["ADAPTIVE_CHESS_DATA_DIR"] = temp
         # Qt offscreen still constructs and paints the actual MainWindow.
         variables["QT_QPA_PLATFORM"] = "offscreen"
-        for stage, resume, complete in [("first-run", False, False), ("resume", True, False), ("completion", False, True)]:
+        for stage, resume, complete in [("first-run", False, False), ("resume", True, False), ("completion", False, True), ("polish", False, False)]:
             report = output / f"{stage}.json"
             if report.exists():
                 report.unlink()
@@ -25,13 +25,17 @@ def smoke(command: list[str], output: Path):
                 args.append("--smoke-resume")
             if complete:
                 args.append("--smoke-complete")
+            if stage == "polish":
+                args.append("--smoke-polish")
             try:
                 process = subprocess.run(args, env=variables, timeout=100, capture_output=True, text=True)
                 (output / f"{stage}.stderr.txt").write_text(process.stderr, encoding="utf-8")
                 if process.returncode or not report.is_file():
                     raise RuntimeError(f"{stage}: exit={process.returncode}; {process.stderr[-3000:]}")
                 result = json.loads(report.read_text(encoding="utf-8"))
-                assert all(result.get(key) for key in ["success", "window_visible", "database_created", "settings_created", "engine_closed"]), result
+                checks = ["success", "window_visible", "engine_closed"]
+                checks += ["mute_verified"] if stage == "polish" else ["database_created", "settings_created"]
+                assert all(result.get(key) for key in checks), result
                 print(stage, result["message"])
             finally:
                 log = Path(temp) / "logs/app.log"

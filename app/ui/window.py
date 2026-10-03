@@ -7,7 +7,7 @@ from pathlib import Path
 
 import chess
 from PySide6.QtCore import QThreadPool, QTimer, Qt, Slot
-from PySide6.QtWidgets import (QApplication, QComboBox, QDialog, QHBoxLayout, QInputDialog,
+from PySide6.QtWidgets import (QComboBox, QDialog, QHBoxLayout, QInputDialog,
     QLabel, QListWidget, QMainWindow, QMessageBox, QPushButton, QSplitter, QTableWidget,
     QTableWidgetItem, QTextEdit, QVBoxLayout, QWidget)
 
@@ -18,6 +18,7 @@ from app.services.session import Session
 from app.ui.board import ChessBoard
 from app.ui.dialogs import AnalysisDialog, SettingsDialog, StatisticsDialog
 from app.ui.workers import Worker
+from app.ui.sounds import SoundPlayer, move_cue
 
 log = logging.getLogger(__name__)
 STYLE = """
@@ -42,6 +43,7 @@ class MainWindow(QMainWindow):
         self.resize(1080, 790)
         self.directory = directory
         self.settings = Settings(directory)
+        self.sounds = SoundPlayer(self)
         self.store = Store(directory / "chess.sqlite3")
         self.session = Session(self.store)
         self.engine = engine or EngineService()
@@ -132,6 +134,7 @@ class MainWindow(QMainWindow):
 
     def apply_settings(self):
         values = self.settings.values
+        self.sounds.set_enabled(values["sound"])
         self.board.theme = values["theme"]
         self.board.highlight_legal = values["legal_highlights"]
         self.color_combo.setCurrentText(values["player_color"])
@@ -144,7 +147,7 @@ class MainWindow(QMainWindow):
         dialog.destroyed.connect(lambda: self.dialogs.remove(dialog) if dialog in self.dialogs else None)
         dialog.show()
 
-    def refresh(self):
+    def refresh(self, *, animate_move=False):
         active = self.game is not None and self.game.result == "*"
         self.board.interactive = active and not self.busy and self.game.board.turn == self.game.player_color
         self.new_button.setEnabled(not self.busy)
@@ -155,7 +158,7 @@ class MainWindow(QMainWindow):
         if self.game:
             self.board.player_color = self.game.player_color
             self.board.orientation = self.game.player_color
-            self.board.set_position(self.game.board)
+            self.board.set_position(self.game.board, animate=animate_move)
             board = self.game.board.root()
             lines = []
             for move in self.game.board.move_stack:
@@ -241,10 +244,11 @@ class MainWindow(QMainWindow):
 
     def commit_move(self, move):
         try:
+            before = self.game.board.copy(stack=False)
             self.session.play(move)
-            if self.settings.values["sound"]:
-                QApplication.beep()
-            self.refresh()
+            self.sounds.set_enabled(self.settings.values["sound"])
+            self.sounds.play(move_cue(before, self.game.board, move, self.game.result))
+            self.refresh(animate_move=True)
             self.advance()
         except Exception as error:
             log.exception("Move/save failed")
@@ -369,6 +373,8 @@ class MainWindow(QMainWindow):
         if self.game and not self.busy and self.game.result == "*":
             if QMessageBox.question(self, "Завершить партию", "Вы хотите сдаться?") == QMessageBox.Yes:
                 self.session.resign()
+                self.sounds.set_enabled(self.settings.values["sound"])
+                self.sounds.play("end")
                 self.refresh()
                 self.advance()
 
@@ -423,6 +429,8 @@ class MainWindow(QMainWindow):
 
     def closeEvent(self, event):
         self.closing = True
+        self.board.animation.stop()
+        self.sounds.stop()
         self.engine.cancelled.set()
         self.pool.waitForDone()
         self.engine.close()
