@@ -36,6 +36,7 @@ PRINCIPLES = {
     'won_to_equal':'Даже когда твоя позиция лучше, проверяй ответ соперника перед каждым ходом.',
     'equal_to_worse':'В спокойной позиции тоже проверяй, какую возможность твой ход даёт сопернику.',
 }
+DATIVE = {chess.PAWN:'пешке',chess.KNIGHT:'коню',chess.BISHOP:'слону',chess.ROOK:'ладье',chess.QUEEN:'ферзю',chess.KING:'королю'}
 
 
 def legal_move(board, value):
@@ -96,12 +97,15 @@ def present_simple(before, played, explanation, selected_uci=None, legacy_best=N
     event = _victim(line, color)
     why = 'По сохранённым данным точную причину ошибки пока нельзя объяснить уверенно.'
     consequence = 'Не стоит считать потерю фигуры или угрозу королю доказанной без проверенного продолжения.'
-    benefit = 'Подробные причины выбора этого хода в старом разборе не сохранены.'
+    benefit = ('Это вариант для сравнения; уверенно объяснить, какую проблему он исправляет, пока нельзя.' if selected else
+               'Подробные причины выбора этого хода в старом разборе не сохранены.')
     key_squares = selected.get('key_squares', explanation.get('key_squares', []))[:2]
 
     if kind in ('material_loss','pawn_loss') and event:
-        why = 'Этот ход оставляет фигуру там, где соперник может её забрать.' if kind == 'material_loss' else 'Ты оставляешь пешку там, где соперник может её забрать.'
-        consequence = _loss_text(event) + ' В найденном продолжении ты теряешь её, не получая равноценной фигуры взамен.'
+        attacker = line['states'][event['ply']-1].piece_at(event['attacker'])
+        why = (f"Этот ход позволяет {DATIVE[attacker.piece_type]} соперника забрать {ACCUSATIVE[event['victim']]} на {chess.square_name(event['square'])}."
+               if attacker else 'Этот ход оставляет фигуру там, где соперник может её забрать.')
+        consequence = _loss_text(event) + ' В этом продолжении потеря не окупается ответными взятиями.'
         best_line = trace(before, selected.get('pv',[]), color)
         if any(e['color']==color and e['victim']==event['victim'] for e in best_line['events']):
             returned = [e for e in best_line['events'] if e['color']!=color]
@@ -113,22 +117,37 @@ def present_simple(before, played, explanation, selected_uci=None, legacy_best=N
         position = line['states'][min(motif.get('ply',1),len(line['states'])-1)]
         targets = [position.piece_at(s) for s in motif.get('targets',[]) if position.piece_at(s)]
         names = [ACCUSATIVE[p.piece_type] for p in targets]
-        why = 'Ты позволяешь одной фигуре соперника напасть сразу на ' + (' и '.join(names[:2]) if len(names)==2 else ', '.join(names)) + '.'
+        why = 'Ты позволяешь одной фигуре соперника напасть сразу на ' + (', '.join(names[:-1])+' и '+names[-1] if len(names)>1 else 'две твои фигуры') + '.'
         consequence = _loss_text(event) + (' Пока ты защищаешь короля, другая фигура остаётся под угрозой.' if any(p.piece_type==chess.KING for p in targets) else 'Одновременно справиться с обеими угрозами в найденном продолжении не получается.')
         benefit = 'Этот ход избегает показанного двойного нападения и потери фигуры.'
         attack = legal_move(line['states'][1], motif.get('move'))
         key_squares = [event['square'], attack.from_square] if attack else [event['square']]
     elif kind == 'pin' and event:
-        why = ('Твоя фигура прикрывает короля. Увести её нельзя: тогда король останется под ударом.' if motif.get('absolute') else
-               'Твоя фигура прикрывает другую, более ценную фигуру. Если убрать защитника, соперник сможет добраться до неё.')
+        position = line['states'][min(motif.get('ply',1),len(line['states'])-1)]
+        targets = [position.piece_at(s) for s in motif.get('targets',[]) if position.piece_at(s)]
+        protector = NAMES[targets[0].piece_type].capitalize() if targets else 'Твоя фигура'
+        protected = ACCUSATIVE[targets[-1].piece_type] if len(targets)>1 else 'другую фигуру'
+        why = (protector+' прикрывает короля. Увести защитника нельзя: тогда король останется под ударом.' if motif.get('absolute') else
+               protector+' прикрывает '+protected+'. Если убрать защитника, соперник сможет забрать '+protected+'.')
         consequence = _loss_text(event) + ' Прикрывающей фигуре трудно уйти, не открыв другую угрозу.'
         benefit = 'Так фигура не попадает в показанную ловушку.'
     elif kind == 'discovered_attack' and event:
         why = 'Когда соперник передвигает одну фигуру, он открывает дорогу другой. На этой дороге оказывается твоя фигура.'
+        prior = line['states'][max(0,min(motif.get('ply',1)-1,len(line['states'])-1))]
+        opened = prior.piece_at(motif.get('attacker',-1)) if motif.get('attacker') is not None else None
+        uncovering = legal_move(prior,motif.get('move'))
+        blocker = prior.piece_at(uncovering.from_square) if uncovering else None
+        if opened and blocker:
+            relative = 'которая закрывала' if blocker.piece_type in (chess.PAWN,chess.ROOK) else 'который закрывал'
+            pronoun = 'твою' if event['victim'] in (chess.PAWN,chess.ROOK) else 'твоего'
+            why = ('Соперник уводит '+ACCUSATIVE[blocker.piece_type]+', '+relative+' дорогу '+DATIVE[opened.piece_type]+'. '
+                   +NAMES[opened.piece_type].capitalize()+' получает возможность забрать '+pronoun+' '+ACCUSATIVE[event['victim']]+'.')
         consequence = _loss_text(event)
         benefit = 'Этот ход не оставляет фигуру на дороге показанного нападения.'
     elif kind == 'overloaded_defender' and event:
         why = 'Одна твоя фигура должна защищать сразу две другие. Соперник заставляет её переключиться на одну из них.'
+        defender = line['states'][min(1,len(line['states'])-1)].piece_at(motif['attacker']) if motif.get('attacker') is not None else None
+        if defender:why = NAMES[defender.piece_type].capitalize()+' защищает сразу две фигуры. Соперник заставляет защитника переключиться на одну из них.'
         consequence = _loss_text(event) + ' После ухода защитника ей некому помочь.'
         benefit = 'Этот ход избегает показанной потери и не требует от одного защитника справиться с обеими угрозами.'
     elif kind == 'bad_exchange' and event:
@@ -220,7 +239,20 @@ def present_simple(before, played, explanation, selected_uci=None, legacy_best=N
         try:chosen = before.parse_san(legacy_best)
         except (ValueError,TypeError):pass
     recommendation = describe_move(before, chosen) + ' ' + benefit if chosen else 'Проверенный лучший ход для этой позиции не сохранён.'
+    alternative_fact = ''
+    if chosen and kind not in ('unresolved','analysis_conflict'):
+        after = before.copy(stack=False);after.push(chosen)
+        mover = after.piece_at(chosen.to_square)
+        for fact in selected.get('distinguishing_features',[]):
+            if fact['type']=='pressure' and mover.piece_type!=chess.KING:
+                targets = [s for s in fact['squares'][:2] if after.piece_at(s)]
+                alternative_fact = (f'С этого места {NAMES[mover.piece_type]} также нападает на '+
+                    ' и '.join(ACCUSATIVE[after.piece_type_at(s)]+' соперника на '+chess.square_name(s) for s in targets)+'.') if targets else ''
+                if alternative_fact:break
+            if fact['type']=='pawn_control':
+                alternative_fact = 'Ещё эта пешка мешает сопернику занять клетки '+', '.join(chess.square_name(s) for s in fact['squares'][:2])+'.'
+                break
     return {'kind':kind,'confidence':confidence,'why':why,'consequence':consequence,
             'recommendation':recommendation,'principle':PRINCIPLES.get(kind,PRINCIPLES['material_loss']),
             'move_description':describe_move(before,played),'recommended_uci':chosen.uci() if chosen else None,
-            'key_squares':list(dict.fromkeys(key_squares))[:2]}
+            'key_squares':list(dict.fromkeys(key_squares))[:2],'alternative_fact':alternative_fact}

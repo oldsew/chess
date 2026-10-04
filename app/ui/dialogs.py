@@ -166,11 +166,13 @@ class AnalysisDialog(QDialog):
         layout.addWidget(self.table)
         self.human_moves = []
         from app.services.simple_analysis import describe_move
-        for recorded in self.moves:
-            position = self.game.board.root()
-            for played in self.game.board.move_stack[:recorded['ply']-1]:position.push(played)
-            actual = self.game.board.move_stack[recorded['ply']-1]
-            self.human_moves.append(describe_move(position,actual))
+        wanted = {record['ply'] for record in self.moves}
+        descriptions = {}
+        position = self.game.board.root()
+        for ply,played in enumerate(self.game.board.move_stack,1):
+            if ply in wanted:descriptions[ply] = describe_move(position,played)
+            position.push(played)
+        self.human_moves = [descriptions.get(record['ply'],'Ход не сохранён.') for record in self.moves]
         split = QSplitter()
         self.board = ChessBoard()
         self.board.setMinimumSize(330,330)
@@ -222,11 +224,11 @@ class AnalysisDialog(QDialog):
         main_side.addWidget(QLabel('Твой ход'))
         main_side.addWidget(self.played_label)
         main_side.addWidget(self.simple_panel)
-        main_side.addWidget(self.professional_panel)
         self.details_toggle = QPushButton('Подробный анализ ▸')
         self.details_toggle.setCheckable(True)
         self.details_toggle.toggled.connect(self.set_detailed)
         main_side.addWidget(self.details_toggle)
+        main_side.addWidget(self.professional_panel)
         main_side.addStretch(1)
         heading('Почему ход плохой')
         self.summary = QLabel('Доска показывает фактическую партию.')
@@ -324,11 +326,14 @@ class AnalysisDialog(QDialog):
         self.simple_panel.setVisible(not self.detailed)
         self.professional_panel.setVisible(self.detailed)
         self.line_controls.setVisible(self.detailed)
+        self.actual_button.setText('К фактической партии' if self.detailed else 'К сыгранному ходу')
         self.details_toggle.blockSignals(True)
         self.details_toggle.setChecked(self.detailed)
         self.details_toggle.setText('Свернуть подробный анализ ▾' if self.detailed else 'Подробный анализ ▸')
         self.details_toggle.blockSignals(False)
         for column in (2,3,5,6):self.table.setColumnHidden(column,not self.detailed)
+        self.table.setMaximumHeight(145 if self.detailed else min(105,self.table.horizontalHeader().height()+min(3,len(self.moves))*30+12))
+        self.table.horizontalHeader().setStretchLastSection(self.detailed)
         for index,record in enumerate(self.moves):
             self.table.item(index,1).setText(record['san'] if self.detailed else self.human_moves[index])
         self.table.setHorizontalHeaderItem(1,QTableWidgetItem('Ваш ход' if self.detailed else 'Что ты сделал'))
@@ -358,9 +363,9 @@ class AnalysisDialog(QDialog):
             if self.showing_before or self.line_moves:
                 self.board.tactical_highlights = set(self.simple_presentation['key_squares'])
             if self.line_moves:
-                self.line_status.setText('Показан рекомендуемый ход. Красная стрелка — твой ход, зелёная — выбранный вариант.')
+                self.line_status.setText('Зелёная стрелка — выбранный совет.')
             elif self.showing_before:
-                self.line_status.setText('До твоего хода · красная стрелка — твой ход, зелёная — рекомендация')
+                self.line_status.setText('Красная — твой ход. Зелёная — совет.')
             else:self.line_status.setText('Показан сыгранный ход.')
         else:
             prefix = f'{self.root_position.fullmove_number}.' if self.root_position.turn else f'{self.root_position.fullmove_number}…'
@@ -435,7 +440,7 @@ class AnalysisDialog(QDialog):
         for alternative in self.alternatives[1:]:
             value = present_simple(self.root_position,self.game.board.move_stack[move['ply']-1],self.current_explanation,
                                    selected_uci=alternative['uci'],selected_info=alternative)
-            self.simple_variations.addItem(value['recommendation'])
+            self.simple_variations.addItem(value['recommendation']+('\n'+value['alternative_fact'] if value['alternative_fact'] else ''))
         self.simple_variations.fit_rows()
         self.simple_variations.blockSignals(False)
         self.other_button.setChecked(False)
@@ -501,6 +506,7 @@ class AnalysisDialog(QDialog):
         self.board.set_position(self.root_position)
         self.render_line()
         self.refresh_simple()
+        if not self.detailed:self.coach_scroll.verticalScrollBar().setValue(0)
 
     def render_line(self):
         position = self.root_position.copy()

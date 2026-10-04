@@ -5,6 +5,7 @@ import re
 import chess
 import pytest
 from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QDialog
 
 from app.services.coaching import build_coaching
 from app.services.game import GameState
@@ -179,3 +180,28 @@ def test_mismatched_saved_evidence_is_not_used_for_beginner_claims(qtbot):
     assert not dialog.alternatives and not dialog.current_explanation
     assert dialog.simple_presentation['kind']=='unresolved'
     assert not dialog.board.annotations
+
+
+def test_developer_mode_still_starts_simple_and_reveals_debug_only_with_details(qtbot):
+    from types import SimpleNamespace
+    parent=QDialog();qtbot.addWidget(parent)
+    parent.settings=SimpleNamespace(values={'developer_mode':True,'animations':True})
+    dialog=AnalysisDialog(row_with_notes(loss_notes()),parent);qtbot.addWidget(dialog);dialog.show()
+    assert not dialog.detailed and not dialog.explanation_debug.isVisible()
+    dialog.set_detailed(True)
+    assert dialog.explanation_debug.isVisible()
+    data=json.loads(dialog.explanation_debug.toPlainText())
+    assert 'material_delta' in data['factors'] and 'PV' in data['factors']
+    dialog.set_detailed(False)
+    assert not dialog.explanation_debug.isVisible()
+
+
+def test_good_move_does_not_receive_a_false_bad_move_heading(qtbot):
+    game=GameState();game.play(chess.Move.from_uci('e2e4'))
+    row={'result':'*','accuracy':100.,'player_color':True,'pgn':game.pgn(),
+         'analysis':json.dumps([{'ply':1,'san':'e4','best_san':'e4','category':'Отличный','cpl':0,
+                                'before_cp':40,'after_cp':40,'coaching':None}])}
+    dialog=AnalysisDialog(row);qtbot.addWidget(dialog);dialog.show()
+    assert dialog.simple_presentation['kind']=='good'
+    assert dialog.simple_headings['why'].text()=='Что получилось'
+    assert 'не отмечен как ошибка' in dialog.simple_labels['why'].text()
