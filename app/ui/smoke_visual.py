@@ -126,6 +126,13 @@ def attach_visual_smoke(app,window,report_path):
                     assert 'сохраняет материал' in dialog.recommendation.text()
                     assert dialog.explanation_debug.isHidden()
                     assert dialog.board.orientation==color and not dialog.board.interactive
+                    assert not dialog.detailed and dialog.simple_panel.isVisible()
+                    assert not dialog.professional_panel.isVisible()
+                    assert all(dialog.table.isColumnHidden(c) for c in (2,3,5,6))
+                    assert dialog.simple_labels['principle'].text() and 'идёт на' in dialog.simple_labels['recommendation'].text()
+                    dialog.grab().save(str(report_path.with_name(report_path.stem+'-simple-'+('white' if color else 'black')+'.png')))
+                    dialog.set_detailed(True);QApplication.processEvents()
+                    assert dialog.width()<=width and dialog.height()<=height,'Detailed analysis does not fit'
                     for widget in [dialog.actual_button,dialog.next,dialog.previous]:
                         corner=widget.mapTo(dialog,widget.rect().bottomRight())
                         assert corner.x()<dialog.width() and corner.y()<dialog.height()
